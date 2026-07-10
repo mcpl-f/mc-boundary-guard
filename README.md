@@ -1,14 +1,18 @@
-# tg-bridge-boundary-guard
+# Boundary Guard
 
-Small Minecraft plugin for servers that use `tg-bridge`.
+Lightweight boundary guard for Minecraft servers that use `tg-bridge`.
+
+It protects the wider world from anonymous griefing while trying to preserve vanilla experience for regular players. No WorldGuard setup is needed, and there is no need to maintain region protections just to keep new accounts near spawn.
 
 ## Purpose
 
-This plugin reduces damage from griefers and lazy anonymous players.
+This plugin reduces damage from griefers, throwaway accounts, and lazy anonymous players.
 
-Unverified players stay inside a configurable sandbox area near spawn. Inside this area they can move, build, break, test, and do whatever your server rules allow.
+Unverified players stay inside a configurable sandbox spawn area. Inside this area they can move, build, break, test, and do whatever your server rules allow.
 
-To leave sandbox and access the wider world, player must verify through Telegram by binding Minecraft account to Telegram account. This makes player less anonymous and raises cost of griefing.
+To leave the sandbox and access the wider world, a player must pass Telegram verification by binding their Minecraft account to a Telegram account. This anti-grief account verification makes players less anonymous and raises the cost of griefing without changing normal gameplay for verified players.
+
+The goal is simple: keep unverified accounts contained at spawn, let verified players play normally, and avoid heavy region protection plugins when all you need is a small boundary guard.
 
 ## Behavior
 
