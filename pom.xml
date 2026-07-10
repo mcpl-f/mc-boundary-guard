@@ -26,8 +26,8 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>me.fulcanelly</groupId>
-            <artifactId>tg-bridge</artifactId>
+            <groupId>com.github.fulcanelly</groupId>
+            <artifactId>mctg-bridge</artifactId>
             <version>1.4.2</version>
             <scope>provided</scope>
         </dependency>
@@ -37,6 +37,10 @@
         <repository>
             <id>spigot-repo</id>
             <url>https://hub.spigotmc.org/nexus/content/groups/public/</url>
+        </repository>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
         </repository>
     </repositories>
 
