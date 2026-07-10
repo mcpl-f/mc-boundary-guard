@@ -1,0 +1,30 @@
+# Distance from the anchor where unbound players are allowed to move.
+# Normal worlds use world spawn, Nether uses this value divided by 8,
+# and The End uses this value from 0,0.
+allowed-radius: 2048.0
+
+# Avoids spamming the warning on every PlayerMoveEvent.
+message-cooldown-millis: 500.0
+
+# Used when player locale is unsupported or message is missing.
+default-locale: ru
+
+messages:
+  en:
+    blocked: "Bind your Minecraft account to Telegram before leaving spawn."
+    bind-button: "[Bind Telegram]"
+    bind-hover: "Run /tg account register"
+    spawn-button: "[Teleport to spawn]"
+    spawn-hover: "Run /tgspawn"
+    teleported: "Teleported to the allowed spawn area."
+    already-in-area: "You are already inside the allowed spawn area."
+    only-player: "Only players can use this command."
+  ru:
+    blocked: "Привяжи Minecraft аккаунт к Telegram перед выходом со спавна."
+    bind-button: "[Привязать Telegram]"
+    bind-hover: "Выполнить /tg account register"
+    spawn-button: "[Телепорт на спавн]"
+    spawn-hover: "Выполнить /tgspawn"
+    teleported: "Телепортирован в разрешенную зону спавна."
+    already-in-area: "Ты уже находишься в разрешенной зоне спавна."
+    only-player: "Эту команду может использовать только игрок."

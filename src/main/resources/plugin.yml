@@ -1,0 +1,15 @@
+name: ${project.name}
+version: ${project.version}
+description: ${project.description}
+author: fulcanelly
+api-version: 1.16
+
+depend:
+  - tg-bridge
+
+main: me.fulcanelly.tgbridge.boundaryguard.BoundaryGuardPlugin
+
+commands:
+  tgspawn:
+    description: Teleport to the allowed spawn area
+    usage: /tgspawn
