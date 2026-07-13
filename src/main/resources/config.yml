@@ -12,18 +12,18 @@ default-locale: ru
 messages:
   en:
     blocked: "Bind your Minecraft account to Telegram before leaving spawn."
-    bind-button: "[Bind Telegram]"
+    bind-button: "[Bind Telegram - /tg account register]"
     bind-hover: "Run /tg account register"
-    spawn-button: "[Teleport to spawn]"
+    spawn-button: "[Teleport to spawn - /tgspawn]"
     spawn-hover: "Run /tgspawn"
     teleported: "Teleported to the allowed spawn area."
     already-in-area: "You are already inside the allowed spawn area."
     only-player: "Only players can use this command."
   ru:
     blocked: "Привяжи Minecraft аккаунт к Telegram перед выходом со спавна."
-    bind-button: "[Привязать Telegram]"
+    bind-button: "[Привязать Telegram - /tg account register]"
     bind-hover: "Выполнить /tg account register"
-    spawn-button: "[Телепорт на спавн]"
+    spawn-button: "[Телепорт на спавн - /tgspawn]"
     spawn-hover: "Выполнить /tgspawn"
     teleported: "Телепортирован в разрешенную зону спавна."
     already-in-area: "Ты уже находишься в разрешенной зоне спавна."
