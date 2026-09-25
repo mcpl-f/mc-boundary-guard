@@ -9,18 +9,34 @@ import me.fulcanelly.tgbridge.boundaryguard.integrations.tgbridge.TelegramLinkSt
 import me.fulcanelly.tgbridge.boundaryguard.services.conditions.checks.MinimumPlaytimeCondition;
 import me.fulcanelly.tgbridge.boundaryguard.services.conditions.checks.TelegramLinkedCondition;
 
+/**
+ * Builds runtime conditions from the normalized {@code rules.condition} YAML tree.
+ * Group nodes use {@code all} or {@code any}; leaf nodes describe one check and
+ * its options, for example {@code time-played-limit: {hours: 2.5}}.
+ */
 @RequiredArgsConstructor
 public final class ConditionFactory {
 
+    private static final String ALL = "all";
+    private static final String ANY = "any";
+
+    private static final String TELEGRAM_LINK_CHECK = "tg-linking-check";
+    private static final String PLAYTIME_LIMIT = "time-played-limit";
+
     private final TelegramLinkStatusService telegramLinkStatus;
 
+    /**
+     * Converts one normalized YAML condition node into its executable rule.
+     */
     public Condition fromConfig(Object configNode) {
         if (configNode instanceof Map<?, ?> map) {
             return fromMap(map);
         }
+
         if (configNode instanceof String name) {
-            return leaf(name, null);
+            return createLeaf(name, null);
         }
+
         throw new IllegalArgumentException("Invalid condition configuration: " + configNode);
     }
 
@@ -31,36 +47,52 @@ public final class ConditionFactory {
 
         Map.Entry<?, ?> entry = config.entrySet().iterator().next();
         String name = String.valueOf(entry.getKey());
-        Object value = entry.getValue();
+        Object parameters = entry.getValue();
 
-        if ("all".equals(name) || "any".equals(name)) {
-            if (!(value instanceof List<?> children)) {
-                throw new IllegalArgumentException(name + " condition must be a list");
-            }
-            List<Condition> conditions = new ArrayList<>(children.size());
-            for (Object child : children) {
-                conditions.add(fromConfig(child));
-            }
-            ConditionApplier.Operator operator = "all".equals(name)
-                    ? ConditionApplier.Operator.ALL
-                    : ConditionApplier.Operator.ANY;
-            return new ConditionApplier(operator, conditions);
+        if (ALL.equals(name)) {
+            return composite(name, parameters, ConditionApplier.Operator.ALL);
         }
 
-        return leaf(name, value);
+        if (ANY.equals(name)) {
+            return composite(name, parameters, ConditionApplier.Operator.ANY);
+        }
+
+        return createLeaf(name, parameters);
     }
 
-    private Condition leaf(String name, Object value) {
-        if ("tg-linking-check".equals(name)) {
-            return new TelegramLinkedCondition(telegramLinkStatus);
+    private Condition composite(String name, Object value, ConditionApplier.Operator operator) {
+        if (!(value instanceof List<?> childNodes)) {
+            throw new IllegalArgumentException(name + " condition must be a list");
         }
-        if ("time-played-limit".equals(name)) {
-            Object hoursValue = value instanceof Map<?, ?> map ? map.get("hours") : null;
-            if (!(hoursValue instanceof Number hours)) {
-                throw new IllegalArgumentException("time-played-limit requires numeric hours");
-            }
-            return new MinimumPlaytimeCondition(hours.doubleValue());
+
+        // Parse children through the same entry point so groups can nest to any depth.
+        List<Condition> children = new ArrayList<>(childNodes.size());
+
+        for (Object childNode : childNodes) {
+            children.add(fromConfig(childNode));
         }
-        throw new IllegalArgumentException("Unknown condition: " + name);
+
+        return new ConditionApplier(operator, children);
+    }
+
+    private Condition createLeaf(String name, Object parameters) {
+        return switch (name) {
+            case TELEGRAM_LINK_CHECK -> new TelegramLinkedCondition(telegramLinkStatus);
+            case PLAYTIME_LIMIT -> new MinimumPlaytimeCondition(readHours(parameters));
+            default -> throw new IllegalArgumentException("Unknown condition: " + name);
+        };
+    }
+
+    private double readHours(Object parameters) {
+        if (!(parameters instanceof Map<?, ?> values)) {
+            throw new IllegalArgumentException(PLAYTIME_LIMIT + " requires numeric hours");
+        }
+
+        Object hoursValue = values.get("hours");
+        if (!(hoursValue instanceof Number hours)) {
+            throw new IllegalArgumentException(PLAYTIME_LIMIT + " requires numeric hours");
+        }
+
+        return hours.doubleValue();
     }
 }
