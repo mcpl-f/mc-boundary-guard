@@ -4,22 +4,19 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import lombok.RequiredArgsConstructor;
 import me.fulcanelly.tgbridge.boundaryguard.domain.BoundaryArea;
 import me.fulcanelly.tgbridge.boundaryguard.services.restrictions.Restriction;
 
 import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 
+@RequiredArgsConstructor
 public final class AdventureModeRestriction implements Restriction {
 
     private final BoundaryArea boundaryArea;
     private final boolean everywhere;
     private final Map<UUID, GameMode> previousModes = new HashMap<>();
-
-    public AdventureModeRestriction(BoundaryArea boundaryArea, boolean everywhere) {
-        this.boundaryArea = boundaryArea;
-        this.everywhere = everywhere;
-    }
 
     @Override
     public void refresh(Player player, boolean restricted) {

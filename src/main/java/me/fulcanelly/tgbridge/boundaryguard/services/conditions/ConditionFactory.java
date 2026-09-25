@@ -4,24 +4,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import lombok.RequiredArgsConstructor;
 import me.fulcanelly.tgbridge.boundaryguard.integrations.tgbridge.TelegramLinkStatusService;
 import me.fulcanelly.tgbridge.boundaryguard.services.conditions.checks.MinimumPlaytimeCondition;
 import me.fulcanelly.tgbridge.boundaryguard.services.conditions.checks.TelegramLinkedCondition;
 
-import org.bukkit.configuration.ConfigurationSection;
-
+@RequiredArgsConstructor
 public final class ConditionFactory {
 
     private final TelegramLinkStatusService telegramLinkStatus;
 
-    public ConditionFactory(TelegramLinkStatusService telegramLinkStatus) {
-        this.telegramLinkStatus = telegramLinkStatus;
-    }
-
     public Condition fromConfig(Object configNode) {
-        if (configNode instanceof ConfigurationSection section) {
-            return fromMap(section.getValues(false));
-        }
         if (configNode instanceof Map<?, ?> map) {
             return fromMap(map);
         }
@@ -62,9 +55,7 @@ public final class ConditionFactory {
             return new TelegramLinkedCondition(telegramLinkStatus);
         }
         if ("time-played-limit".equals(name)) {
-            Object hoursValue = value instanceof ConfigurationSection section
-                    ? section.get("hours")
-                    : value instanceof Map<?, ?> map ? map.get("hours") : null;
+            Object hoursValue = value instanceof Map<?, ?> map ? map.get("hours") : null;
             if (!(hoursValue instanceof Number hours)) {
                 throw new IllegalArgumentException("time-played-limit requires numeric hours");
             }

@@ -1,15 +1,14 @@
 package me.fulcanelly.tgbridge.boundaryguard.domain;
 
+import lombok.RequiredArgsConstructor;
+
 import org.bukkit.Location;
 import org.bukkit.World;
 
+@RequiredArgsConstructor
 public final class BoundaryArea {
 
     private final double configuredRadius;
-
-    public BoundaryArea(double configuredRadius) {
-        this.configuredRadius = configuredRadius;
-    }
 
     public boolean contains(Location location) {
         Location anchor = getAnchor(location.getWorld());
