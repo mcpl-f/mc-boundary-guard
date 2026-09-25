@@ -1,8 +1,17 @@
-package me.fulcanelly.tgbridge.boundaryguard;
+package me.fulcanelly.tgbridge.boundaryguard.listeners;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+
+import me.fulcanelly.tgbridge.boundaryguard.services.restrictions.RestrictionService;
+import me.fulcanelly.tgbridge.boundaryguard.utils.MessageLocalizer;
+
+import net.md_5.bungee.api.ChatColor;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.HoverEvent;
+import net.md_5.bungee.api.chat.TextComponent;
+import net.md_5.bungee.api.chat.hover.content.Text;
 
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -11,44 +20,31 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
 
-import me.fulcanelly.tgbridge.tools.twofactor.register.SignupLoginReception;
-import net.md_5.bungee.api.ChatColor;
-import net.md_5.bungee.api.chat.ClickEvent;
-import net.md_5.bungee.api.chat.HoverEvent;
-import net.md_5.bungee.api.chat.TextComponent;
-import net.md_5.bungee.api.chat.hover.content.Text;
+public final class BoundaryMoveListener implements Listener {
 
-final class BoundaryMoveListener implements Listener {
-
-    private final BoundaryArea boundaryArea;
-    private final SignupLoginReception reception;
+    private final RestrictionService restrictions;
     private final MessageLocalizer messages;
     private final long messageCooldownMillis;
     private final Map<UUID, Long> lastMessageAt = new HashMap<>();
 
-    BoundaryMoveListener(
-            BoundaryArea boundaryArea,
-            SignupLoginReception reception,
+    public BoundaryMoveListener(
+            RestrictionService restrictions,
             MessageLocalizer messages,
             long messageCooldownMillis) {
-        this.boundaryArea = boundaryArea;
-        this.reception = reception;
+        this.restrictions = restrictions;
         this.messages = messages;
         this.messageCooldownMillis = messageCooldownMillis;
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onMove(PlayerMoveEvent event) {
-
         Location to = event.getTo();
-
-        if (to == null || isSameBlock(event.getFrom(), to) || boundaryArea.contains(to)) {
+        if (to == null || isSameBlock(event.getFrom(), to)) {
             return;
         }
 
         Player player = event.getPlayer();
-
-        if (isBound(player)) {
+        if (restrictions.allowsMovement(player, to)) {
             return;
         }
 
@@ -63,14 +59,9 @@ final class BoundaryMoveListener implements Listener {
                 && from.getBlockZ() == to.getBlockZ();
     }
 
-    private boolean isBound(Player player) {
-        return reception.getTgByUser(player.getName()).isPresent();
-    }
-
     private void warn(Player player) {
         long now = System.currentTimeMillis();
         long last = lastMessageAt.getOrDefault(player.getUniqueId(), 0L);
-
         if (now - last < messageCooldownMillis) {
             return;
         }

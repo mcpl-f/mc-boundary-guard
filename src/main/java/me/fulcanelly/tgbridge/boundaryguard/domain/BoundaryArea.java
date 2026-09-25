@@ -1,17 +1,17 @@
-package me.fulcanelly.tgbridge.boundaryguard;
+package me.fulcanelly.tgbridge.boundaryguard.domain;
 
 import org.bukkit.Location;
 import org.bukkit.World;
 
-final class BoundaryArea {
+public final class BoundaryArea {
 
     private final double configuredRadius;
 
-    BoundaryArea(double configuredRadius) {
+    public BoundaryArea(double configuredRadius) {
         this.configuredRadius = configuredRadius;
     }
 
-    boolean contains(Location location) {
+    public boolean contains(Location location) {
         Location anchor = getAnchor(location.getWorld());
         double radius = getRadius(location.getWorld());
         double dx = location.getX() - anchor.getX();
@@ -20,7 +20,7 @@ final class BoundaryArea {
         return dx * dx + dz * dz <= radius * radius;
     }
 
-    Location getTeleportLocation(World world) {
+    public Location getTeleportLocation(World world) {
         if (world.getEnvironment() != World.Environment.THE_END) {
             return world.getSpawnLocation();
         }

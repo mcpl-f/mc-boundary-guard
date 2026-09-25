@@ -6,12 +6,55 @@ allowed-radius: 2048.0
 # Avoids spamming the warning on every PlayerMoveEvent.
 message-cooldown-millis: 500.0
 
+# Rules decide when restrictions are lifted.
+# `all` requires every listed condition; `any` requires at least one.
+# Example: require both Telegram linking and 2.5 hours played:
+# condition:
+#   all:
+#     - tg-linking-check: true
+#     - time-played-limit:
+#         hours: 2.5
+# Example: accept either Telegram linking OR 2.5 hours played:
+# condition:
+#   any:
+#     - tg-linking-check: true
+#     - time-played-limit:
+#         hours: 2.5
+# Example: at least 1 hour played AND (Telegram linked OR 2.5 hours played):
+# condition:
+#   all:
+#     - time-played-limit:
+#         hours: 1.0
+#     - any:
+#         - tg-linking-check: true
+#         - time-played-limit:
+#             hours: 2.5
+rules:
+  telegram-check-interval-ticks: 60
+  condition:
+    all:
+      - tg-linking-check: true
+
+  strategies:
+    keep-on-spawn:
+      radius: 2048.0
+
+    # Uncomment the block to enable Adventure Mode while restricted.
+    # Set everywhere to true to apply in every world; false limits it to radius.
+    # switch-2-adventure-mode:
+    #   everywhere: false
+    #   radius: 512.0
+
+    # Uncomment to prevent restricted players from using containers.
+    # forbid-container-use: true
+
 # Used when player locale is unsupported or message is missing.
 default-locale: ru
 
 messages:
   en:
     blocked: "Bind your Minecraft account to Telegram before leaving spawn."
+    container-blocked: "Link your Telegram account before using containers."
     bind-button: "[Bind Telegram - /tg account register]"
     bind-hover: "Run /tg account register"
     spawn-button: "[Teleport to spawn - /tgspawn]"
@@ -21,6 +64,7 @@ messages:
     only-player: "Only players can use this command."
   ru:
     blocked: "Привяжи Minecraft аккаунт к Telegram перед выходом со спавна."
+    container-blocked: "Привяжи Telegram, чтобы пользоваться контейнерами."
     bind-button: "[Привязать Telegram - /tg account register]"
     bind-hover: "Выполнить /tg account register"
     spawn-button: "[Телепорт на спавн - /tgspawn]"

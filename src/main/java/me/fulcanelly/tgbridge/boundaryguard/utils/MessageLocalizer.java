@@ -1,23 +1,23 @@
-package me.fulcanelly.tgbridge.boundaryguard;
+package me.fulcanelly.tgbridge.boundaryguard.utils;
 
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 
-final class MessageLocalizer {
+public final class MessageLocalizer {
 
     private final FileConfiguration config;
     private final String defaultLocale;
 
-    MessageLocalizer(FileConfiguration config) {
+    public MessageLocalizer(FileConfiguration config) {
         this.config = config;
         this.defaultLocale = normalizeLocale(config.getString("default-locale", "en"));
     }
 
-    String get(Player player, String key) {
+    public String get(Player player, String key) {
         return get(playerLocale(player), key);
     }
 
-    String getDefault(String key) {
+    public String getDefault(String key) {
         return get(defaultLocale, key);
     }
 
