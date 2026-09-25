@@ -1,14 +1,9 @@
 package me.fulcanelly.tgbridge.boundaryguard.listeners;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-
 import me.fulcanelly.tgbridge.boundaryguard.integrations.tgbridge.TelegramLinkStatusService;
 import me.fulcanelly.tgbridge.boundaryguard.services.restrictions.RestrictionService;
-import me.fulcanelly.tgbridge.boundaryguard.utils.MessageLocalizer;
+import me.fulcanelly.tgbridge.boundaryguard.services.utils.PlayerWarningService;
 
-import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -24,19 +19,15 @@ public final class RestrictionEventListener implements Listener {
 
     private final RestrictionService restrictions;
     private final TelegramLinkStatusService telegramLinkStatus;
-    private final MessageLocalizer messages;
-    private final long warningCooldownMillis;
-    private final Map<UUID, Long> lastWarningAt = new HashMap<>();
+    private final PlayerWarningService warnings;
 
     public RestrictionEventListener(
             RestrictionService restrictions,
             TelegramLinkStatusService telegramLinkStatus,
-            MessageLocalizer messages,
-            long warningCooldownMillis) {
+            PlayerWarningService warnings) {
         this.restrictions = restrictions;
         this.telegramLinkStatus = telegramLinkStatus;
-        this.messages = messages;
-        this.warningCooldownMillis = warningCooldownMillis;
+        this.warnings = warnings;
     }
 
     @EventHandler
@@ -49,7 +40,7 @@ public final class RestrictionEventListener implements Listener {
         Player player = event.getPlayer();
         restrictions.forget(player);
         telegramLinkStatus.forget(player);
-        lastWarningAt.remove(player.getUniqueId());
+        warnings.forget(player);
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -60,31 +51,29 @@ public final class RestrictionEventListener implements Listener {
             return;
         }
         event.setCancelled(true);
-        warn(player);
+        warnings.send(player, "container-blocked");
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onInventoryClick(InventoryClickEvent event) {
-        if (!isContainer(event.getView().getTopInventory().getType())) {
+        if (!isContainer(event.getView().getTopInventory().getType())
+                || !(event.getWhoClicked() instanceof Player player)
+                || restrictions.allowsContainerUse(player)) {
             return;
         }
-        blockIfRestricted(event.getWhoClicked());
+        event.setCancelled(true);
+        warnings.send(player, "container-blocked");
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onInventoryDrag(InventoryDragEvent event) {
-        if (!isContainer(event.getView().getTopInventory().getType())) {
+        if (!isContainer(event.getView().getTopInventory().getType())
+                || !(event.getWhoClicked() instanceof Player player)
+                || restrictions.allowsContainerUse(player)) {
             return;
         }
-        blockIfRestricted(event.getWhoClicked());
-    }
-
-    private void blockIfRestricted(HumanEntity human) {
-        if (!(human instanceof Player player) || restrictions.allowsContainerUse(player)) {
-            return;
-        }
-        player.closeInventory();
-        warn(player);
+        event.setCancelled(true);
+        warnings.send(player, "container-blocked");
     }
 
     private boolean isContainer(InventoryType type) {
@@ -106,13 +95,4 @@ public final class RestrictionEventListener implements Listener {
         }
     }
 
-    private void warn(Player player) {
-        long now = System.currentTimeMillis();
-        long last = lastWarningAt.getOrDefault(player.getUniqueId(), 0L);
-        if (now - last < warningCooldownMillis) {
-            return;
-        }
-        lastWarningAt.put(player.getUniqueId(), now);
-        player.sendMessage(messages.get(player, "container-blocked"));
-    }
 }

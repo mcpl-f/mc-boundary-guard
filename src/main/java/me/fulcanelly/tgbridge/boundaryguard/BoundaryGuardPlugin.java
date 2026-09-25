@@ -25,6 +25,7 @@ import me.fulcanelly.tgbridge.boundaryguard.services.restrictions.RestrictionSer
 import me.fulcanelly.tgbridge.boundaryguard.services.restrictions.strategies.AdventureModeRestriction;
 import me.fulcanelly.tgbridge.boundaryguard.services.restrictions.strategies.ContainerUseRestriction;
 import me.fulcanelly.tgbridge.boundaryguard.services.restrictions.strategies.SpawnBoundaryRestriction;
+import me.fulcanelly.tgbridge.boundaryguard.services.utils.PlayerWarningService;
 import me.fulcanelly.tgbridge.boundaryguard.utils.MessageLocalizer;
 
 public final class BoundaryGuardPlugin extends JavaPlugin {
@@ -35,6 +36,7 @@ public final class BoundaryGuardPlugin extends JavaPlugin {
     private MessageLocalizer messages;
     private TelegramLinkStatusService telegramLinkStatus;
     private RestrictionService restrictions;
+    private PlayerWarningService warnings;
     private BukkitTask refreshTask;
 
     @Override
@@ -52,10 +54,12 @@ public final class BoundaryGuardPlugin extends JavaPlugin {
         SignupLoginReception reception = bridge.getInjector().getInstance(SignupLoginReception.class);
 
         double allowedRadius = getConfig().getDouble("allowed-radius", 256.0);
-        boundaryArea = new BoundaryArea(allowedRadius);
+        double spawnRadius = getConfig().getDouble("rules.strategies.keep-on-spawn.radius", allowedRadius);
+        boundaryArea = new BoundaryArea(spawnRadius);
         messages = new MessageLocalizer(getConfig());
 
         long cooldownMillis = Math.round(getConfig().getDouble("message-cooldown-millis", 500.0));
+        warnings = new PlayerWarningService(messages, cooldownMillis);
         long refreshPeriodTicks = Math.max(1L, getConfig().getLong("rules.telegram-check-interval-ticks", 60L));
         telegramLinkStatus = new TelegramLinkStatusService(reception, refreshPeriodTicks * 50L);
 
@@ -71,11 +75,11 @@ public final class BoundaryGuardPlugin extends JavaPlugin {
 
         getServer()
                 .getPluginManager()
-                .registerEvents(new BoundaryMoveListener(restrictions, messages, cooldownMillis), this);
+                .registerEvents(new BoundaryMoveListener(restrictions, warnings), this);
         getServer()
                 .getPluginManager()
                 .registerEvents(
-                        new RestrictionEventListener(restrictions, telegramLinkStatus, messages, cooldownMillis), this);
+                        new RestrictionEventListener(restrictions, telegramLinkStatus, warnings), this);
 
         refreshTask = getServer()
                 .getScheduler()

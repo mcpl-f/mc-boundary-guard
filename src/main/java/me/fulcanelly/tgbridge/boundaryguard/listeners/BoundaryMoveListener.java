@@ -1,11 +1,7 @@
 package me.fulcanelly.tgbridge.boundaryguard.listeners;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-
 import me.fulcanelly.tgbridge.boundaryguard.services.restrictions.RestrictionService;
-import me.fulcanelly.tgbridge.boundaryguard.utils.MessageLocalizer;
+import me.fulcanelly.tgbridge.boundaryguard.services.utils.PlayerWarningService;
 
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.ClickEvent;
@@ -23,17 +19,13 @@ import org.bukkit.event.player.PlayerMoveEvent;
 public final class BoundaryMoveListener implements Listener {
 
     private final RestrictionService restrictions;
-    private final MessageLocalizer messages;
-    private final long messageCooldownMillis;
-    private final Map<UUID, Long> lastMessageAt = new HashMap<>();
+    private final PlayerWarningService warnings;
 
     public BoundaryMoveListener(
             RestrictionService restrictions,
-            MessageLocalizer messages,
-            long messageCooldownMillis) {
+            PlayerWarningService warnings) {
         this.restrictions = restrictions;
-        this.messages = messages;
-        this.messageCooldownMillis = messageCooldownMillis;
+        this.warnings = warnings;
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -49,7 +41,9 @@ public final class BoundaryMoveListener implements Listener {
         }
 
         event.setTo(event.getFrom());
-        warn(player);
+        if (warnings.tryWarn(player)) {
+            player.spigot().sendMessage(buildBlockedMessage(player));
+        }
     }
 
     private boolean isSameBlock(Location from, Location to) {
@@ -59,27 +53,16 @@ public final class BoundaryMoveListener implements Listener {
                 && from.getBlockZ() == to.getBlockZ();
     }
 
-    private void warn(Player player) {
-        long now = System.currentTimeMillis();
-        long last = lastMessageAt.getOrDefault(player.getUniqueId(), 0L);
-        if (now - last < messageCooldownMillis) {
-            return;
-        }
-
-        lastMessageAt.put(player.getUniqueId(), now);
-        player.spigot().sendMessage(buildBlockedMessage(player));
-    }
-
     private TextComponent buildBlockedMessage(Player player) {
-        TextComponent root = new TextComponent(ChatColor.RED + messages.get(player, "blocked") + " ");
+        TextComponent root = new TextComponent(ChatColor.RED + warnings.message(player, "blocked") + " ");
 
-        TextComponent register = new TextComponent(ChatColor.GREEN + messages.get(player, "bind-button"));
+        TextComponent register = new TextComponent(ChatColor.GREEN + warnings.message(player, "bind-button"));
         register.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/tg account register"));
-        register.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text(messages.get(player, "bind-hover"))));
+        register.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text(warnings.message(player, "bind-hover"))));
 
-        TextComponent spawn = new TextComponent(ChatColor.YELLOW + " " + messages.get(player, "spawn-button"));
+        TextComponent spawn = new TextComponent(ChatColor.YELLOW + " " + warnings.message(player, "spawn-button"));
         spawn.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/tgspawn"));
-        spawn.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text(messages.get(player, "spawn-hover"))));
+        spawn.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text(warnings.message(player, "spawn-hover"))));
 
         root.addExtra(register);
         root.addExtra(spawn);
