@@ -100,7 +100,7 @@ public final class MinecraftMessageService {
                 player, reason.get(), "join.before", "gerund", List.of(RestrictionEffect.LEAVE_SPAWN));
 
         TextComponent spawn = new TextComponent(" " + get(player, "spawn-button"));
-        spawn.setColor(ChatColor.GREEN);
+        spawn.setColor(ChatColor.BLUE);
         spawn.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/tgspawn"));
         spawn.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text(get(player, "spawn-hover"))));
         message.addExtra(spawn);
@@ -152,7 +152,7 @@ public final class MinecraftMessageService {
     }
 
     // Builds "<reasons> <joinKey> <effects>" as one red TextComponent tree, with
-    // each clickable reason (e.g. linking Telegram) standing out in green. This
+    // clickable reasons in blue, connectors and restrictions in yellow. This
     // has to be a component tree rather than one plain string precisely because
     // a reason can carry its own click/hover action. Red is set once, here, on
     // the root - every part below that doesn't set its own color (the join
@@ -167,7 +167,7 @@ public final class MinecraftMessageService {
         TextComponent message = new TextComponent("");
         message.setColor(ChatColor.RED);
         message.addExtra(reasonExprComponent(player, shownReason));
-        message.addExtra(new TextComponent(" " + get(player, joinKey) + " "));
+        message.addExtra(coloredText(" " + get(player, joinKey) + " ", ChatColor.YELLOW));
         message.addExtra(effectsComponent(player, effects, restrictionForm));
         return message;
     }
@@ -213,9 +213,9 @@ public final class MinecraftMessageService {
         TextComponent joined = new TextComponent("");
         for (int i = 0; i < effects.size(); i++) {
             if (i > 0) {
-                joined.addExtra(new TextComponent(" " + get(player, "join.and") + " "));
+                joined.addExtra(coloredText(" " + get(player, "join.and") + " ", ChatColor.YELLOW));
             }
-            joined.addExtra(get(player, restrictionKeyFor(effects.get(i), form)));
+            joined.addExtra(coloredText(get(player, restrictionKeyFor(effects.get(i), form)), ChatColor.YELLOW));
         }
         return joined;
     }
@@ -232,7 +232,7 @@ public final class MinecraftMessageService {
         TextComponent joined = new TextComponent("");
         for (int i = 0; i < children.size(); i++) {
             if (i > 0) {
-                joined.addExtra(new TextComponent(" " + get(player, joinKey) + " "));
+                joined.addExtra(coloredText(" " + get(player, joinKey) + " ", ChatColor.YELLOW));
             }
             joined.addExtra(reasonExprComponent(player, children.get(i)));
         }
@@ -251,10 +251,16 @@ public final class MinecraftMessageService {
 
         TextComponent component = new TextComponent(get(player, base + ".label"));
         if (clickable) {
-            component.setColor(ChatColor.GREEN);
+            component.setColor(ChatColor.BLUE);
             component.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, get(player, base + ".command")));
             component.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text(get(player, base + ".hover"))));
         }
+        return component;
+    }
+
+    private TextComponent coloredText(String text, ChatColor color) {
+        TextComponent component = new TextComponent(text);
+        component.setColor(color);
         return component;
     }
 

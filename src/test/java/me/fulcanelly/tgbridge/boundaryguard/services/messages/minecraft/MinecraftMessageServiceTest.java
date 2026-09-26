@@ -136,9 +136,14 @@ class MinecraftMessageServiceTest {
                 player, Optional.of(new ReasonExpr.Leaf(ConditionReason.PLAYTIME)),
                 List.of(RestrictionEffect.LEAVE_SPAWN, RestrictionEffect.USE_CONTAINERS));
 
+        BaseComponent root = sentComponent();
         assertEquals(
                 "play longer so that you can leave the spawn area and use containers",
-                plainText(sentComponent()));
+            plainText(root));
+        BaseComponent joinedEffects = root.getExtra().get(2);
+        assertEquals(ChatColor.YELLOW, joinedEffects.getExtra().get(0).getColor());
+        assertEquals(ChatColor.YELLOW, joinedEffects.getExtra().get(1).getColor());
+        assertEquals(ChatColor.YELLOW, joinedEffects.getExtra().get(2).getColor());
     }
 
     @Test
@@ -166,6 +171,7 @@ class MinecraftMessageServiceTest {
         assertEquals(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/tg account register"),
                 reasonComponent.getClickEvent());
         assertNotNull(reasonComponent.getHoverEvent());
+        assertEquals(ChatColor.BLUE, reasonComponent.getColor());
     }
 
     @Test
@@ -267,6 +273,7 @@ class MinecraftMessageServiceTest {
         BaseComponent spawnComponent = root.getExtra().get(root.getExtra().size() - 1);
         assertEquals(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/tgspawn"), spawnComponent.getClickEvent());
         assertNotNull(spawnComponent.getHoverEvent());
+        assertEquals(ChatColor.BLUE, spawnComponent.getColor());
     }
 
     // RETURN_TO_SPAWN (InSpawnRadiusCondition) isn't durable the way linking or
@@ -288,6 +295,7 @@ class MinecraftMessageServiceTest {
         BaseComponent root = sentComponent();
         assertEquals("[Return to spawn - /tgspawn] before using containers", plainText(root));
         assertEquals(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/tgspawn"), root.getExtra().get(0).getClickEvent());
+        assertEquals(ChatColor.BLUE, root.getExtra().get(0).getColor());
     }
 
     // The exact bug this guards against: RETURN_TO_SPAWN must never be offered
@@ -338,10 +346,8 @@ class MinecraftMessageServiceTest {
                 plainText(sentComponent()));
     }
 
-    // Guards the actual in-game bug this session started from: everything but
-    // the clickable green parts must inherit red from the message root via a
-    // real structured setColor, not just look right after toLegacyText()
-    // strips formatting for the other assertions in this file.
+    // Colors must be assigned structurally to the intended components, not
+    // merely appear in toLegacyText() after legacy formatting is stripped.
     @Test
     void restrictionPhraseInheritsRedFromTheMessageRootInsteadOfStayingUncolored() {
         when(config.defaultLocale()).thenReturn("en");
@@ -355,14 +361,15 @@ class MinecraftMessageServiceTest {
 
         BaseComponent root = sentComponent();
         assertEquals(ChatColor.RED, root.getColor());
+        assertEquals(ChatColor.YELLOW, root.getExtra().get(1).getColor());
 
         BaseComponent effects = root.getExtra().get(root.getExtra().size() - 1);
         BaseComponent restrictionPhrase = effects.getExtra().get(0);
-        assertEquals(ChatColor.RED, restrictionPhrase.getColor());
+        assertEquals(ChatColor.YELLOW, restrictionPhrase.getColor());
     }
 
     @Test
-    void clickableReasonIsGreenWhileTheRestOfTheMessageStaysRed() {
+    void clickableReasonIsBlueWhileConnectorsAreYellowAndTheWarningRootStaysRed() {
         when(config.defaultLocale()).thenReturn("en");
         stubPlayer();
         when(config.message("en", "reasons.tg-linking.label")).thenReturn("[Bind Telegram - /tg account register]");
@@ -377,7 +384,8 @@ class MinecraftMessageServiceTest {
 
         BaseComponent root = sentComponent();
         assertEquals(ChatColor.RED, root.getColor());
-        assertEquals(ChatColor.GREEN, root.getExtra().get(0).getColor());
+        assertEquals(ChatColor.BLUE, root.getExtra().get(0).getColor());
+        assertEquals(ChatColor.YELLOW, root.getExtra().get(1).getColor());
     }
 
     @Test
