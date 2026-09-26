@@ -35,7 +35,7 @@ public final class BoundaryMoveListener implements Listener {
         // That's intentional: `/tgspawn`, advertised right below, is the player's own
         // way back, not something this listener does for them.
         event.setTo(event.getFrom());
-        messages.sendBoundaryBlocked(player);
+        messages.sendBoundaryBlocked(player, restrictions.unmetReason(player));
     }
 
     private boolean isSameBlock(Location from, Location to) {

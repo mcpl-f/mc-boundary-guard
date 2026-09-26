@@ -1,8 +1,11 @@
 package me.fulcanelly.tgbridge.boundaryguard.services.restrictions.strategies;
 
+import java.util.Optional;
+
 import lombok.RequiredArgsConstructor;
 import me.fulcanelly.tgbridge.boundaryguard.domain.BoundaryArea;
 import me.fulcanelly.tgbridge.boundaryguard.services.restrictions.Restriction;
+import me.fulcanelly.tgbridge.boundaryguard.services.restrictions.RestrictionEffect;
 
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -16,5 +19,10 @@ public final class SpawnBoundaryRestriction implements Restriction {
     @Override
     public boolean allowsMovement(Player player, Location destination) {
         return boundaryArea.contains(destination);
+    }
+
+    @Override
+    public Optional<RestrictionEffect> effect() {
+        return Optional.of(RestrictionEffect.LEAVE_SPAWN);
     }
 }

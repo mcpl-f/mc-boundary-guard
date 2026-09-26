@@ -5,6 +5,7 @@ import java.util.List;
 import me.fulcanelly.tgbridge.boundaryguard.domain.BoundaryArea;
 import me.fulcanelly.tgbridge.boundaryguard.services.conditions.Condition;
 import me.fulcanelly.tgbridge.boundaryguard.services.conditions.checks.InSpawnRadiusCondition;
+import me.fulcanelly.tgbridge.boundaryguard.services.restrictions.strategies.ContainerUseRestriction;
 import me.fulcanelly.tgbridge.boundaryguard.services.restrictions.strategies.SpawnBoundaryRestriction;
 
 import org.bukkit.Location;
@@ -15,6 +16,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
@@ -62,5 +64,17 @@ class RestrictionServiceTest {
         when(player.getLocation()).thenReturn(new Location(world, 10, 64, 0));
 
         assertTrue(restrictions.allowsMovement(player, new Location(world, 20, 64, 0)));
+    }
+
+    @Test
+    void activeEffectsListsOneEffectPerStrategyThatReportsOne() {
+        Condition condition = new InSpawnRadiusCondition(new BoundaryArea(100.0));
+        RestrictionService restrictions = new RestrictionService(condition, List.of(
+                new SpawnBoundaryRestriction(new BoundaryArea(100.0)),
+                new ContainerUseRestriction()));
+
+        assertEquals(
+                List.of(RestrictionEffect.LEAVE_SPAWN, RestrictionEffect.USE_CONTAINERS),
+                restrictions.activeEffects());
     }
 }

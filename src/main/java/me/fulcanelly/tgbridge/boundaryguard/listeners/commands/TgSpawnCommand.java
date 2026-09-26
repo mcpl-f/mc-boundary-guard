@@ -20,17 +20,17 @@ public final class TgSpawnCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(ChatColor.RED + messages.getDefault("only-player"));
+            sender.sendMessage(ChatColor.RED + messages.getDefault("tgspawn-command.only-player"));
             return true;
         }
 
         if (boundaryArea.contains(player.getLocation())) {
-            player.sendMessage(ChatColor.GREEN + messages.get(player, "already-in-area"));
+            player.sendMessage(ChatColor.GREEN + messages.get(player, "tgspawn-command.already-in-area"));
             return true;
         }
 
         player.teleport(boundaryArea.getTeleportLocation(player.getWorld()));
-        player.sendMessage(ChatColor.GREEN + messages.get(player, "teleported"));
+        player.sendMessage(ChatColor.GREEN + messages.get(player, "tgspawn-command.teleported"));
         return true;
     }
 }

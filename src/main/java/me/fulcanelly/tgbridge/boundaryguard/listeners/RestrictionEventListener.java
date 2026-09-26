@@ -1,8 +1,11 @@
 package me.fulcanelly.tgbridge.boundaryguard.listeners;
 
+import java.util.List;
+
 import lombok.RequiredArgsConstructor;
 import me.fulcanelly.tgbridge.boundaryguard.integrations.tgbridge.TelegramLinkStatusService;
 import me.fulcanelly.tgbridge.boundaryguard.services.messages.minecraft.MinecraftMessageService;
+import me.fulcanelly.tgbridge.boundaryguard.services.restrictions.RestrictionEffect;
 import me.fulcanelly.tgbridge.boundaryguard.services.restrictions.RestrictionService;
 
 import org.bukkit.GameMode;
@@ -66,7 +69,7 @@ public final class RestrictionEventListener implements Listener {
             return;
         }
         event.setCancelled(true);
-        messages.sendContainerBlocked(player);
+        messages.sendContainerBlocked(player, restrictions.unmetReason(player));
     }
 
     // Adventure Mode itself is silent - the player just finds themselves unable to
@@ -119,9 +122,16 @@ public final class RestrictionEventListener implements Listener {
     // (happened on a live server; see features/restriction-condition-feedback.md).
     // isRestricted() only reads accessCondition.isMet() - it never touches a
     // Restriction strategy, so it cannot re-enter this loop.
+    //
+    // Only RestrictionEffect.INTERACT_FREELY is ever passed here, not
+    // restrictions.activeEffects() - every caller of this method (gamemode
+    // change, arm swing, block place) is, by construction, specifically about
+    // Adventure Mode, so that's the one thing relevant to what the player just
+    // did, regardless of which other strategies happen to also be enabled.
     private void remindIfRestricted(Player player) {
         if (restrictions.isRestricted(player)) {
-            messages.sendConditionReminder(player, restrictions.unmetReasons(player));
+            messages.sendConditionReminder(
+                    player, restrictions.unmetReason(player), List.of(RestrictionEffect.INTERACT_FREELY));
         }
     }
 }

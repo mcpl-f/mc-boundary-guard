@@ -2,6 +2,7 @@ package me.fulcanelly.tgbridge.boundaryguard.services.conditions;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -38,17 +39,25 @@ public final class ConditionApplier implements Condition {
     }
 
     @Override
-    public List<ConditionReason> unmetReasons(Player player) {
+    public Optional<ReasonExpr> unmetReason(Player player) {
         // ALL: every unmet child still needs fixing. ANY: nothing to say once one
         // child is already met; otherwise every child is a valid alternative to show.
         if (operator == Operator.ANY && isMet(player)) {
-            return List.of();
+            return Optional.empty();
         }
 
-        List<ConditionReason> reasons = new ArrayList<>();
+        List<ReasonExpr> children = new ArrayList<>();
         for (Condition condition : conditions) {
-            reasons.addAll(condition.unmetReasons(player));
+            condition.unmetReason(player).ifPresent(children::add);
         }
-        return reasons;
+
+        if (children.isEmpty()) {
+            return Optional.empty();
+        }
+        if (children.size() == 1) {
+            // No group of one - nothing to join, so no join word would ever be used.
+            return Optional.of(children.get(0));
+        }
+        return Optional.of(new ReasonExpr.Group(operator, children));
     }
 }

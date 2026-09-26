@@ -1,9 +1,10 @@
 package me.fulcanelly.tgbridge.boundaryguard.services.restrictions;
 
 import java.util.List;
+import java.util.Optional;
 
 import me.fulcanelly.tgbridge.boundaryguard.services.conditions.Condition;
-import me.fulcanelly.tgbridge.boundaryguard.services.conditions.ConditionReason;
+import me.fulcanelly.tgbridge.boundaryguard.services.conditions.ReasonExpr;
 
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.Location;
@@ -74,8 +75,22 @@ public final class RestrictionService {
     }
 
     /** What this player still needs to satisfy, for a player-facing reminder message. */
-    public List<ConditionReason> unmetReasons(Player player) {
-        return accessCondition.unmetReasons(player);
+    public Optional<ReasonExpr> unmetReason(Player player) {
+        return accessCondition.unmetReason(player);
+    }
+
+    /**
+     * Every {@link RestrictionEffect} currently in play, one per enabled strategy
+     * that reports one - for a reminder that isn't tied to any one specific
+     * action (e.g. an idle-player check), where naming everything currently
+     * active is more useful than picking just one.
+     */
+    public List<RestrictionEffect> activeEffects() {
+        return restrictions.stream()
+                .map(Restriction::effect)
+                .flatMap(Optional::stream)
+                .distinct()
+                .toList();
     }
 
     // InventoryType has no built-in "is a container" predicate, so the block-like

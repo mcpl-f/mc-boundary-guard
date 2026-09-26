@@ -1,10 +1,13 @@
 package me.fulcanelly.tgbridge.boundaryguard.listeners;
 
 import java.util.List;
+import java.util.Optional;
 
 import me.fulcanelly.tgbridge.boundaryguard.integrations.tgbridge.TelegramLinkStatusService;
 import me.fulcanelly.tgbridge.boundaryguard.services.conditions.ConditionReason;
+import me.fulcanelly.tgbridge.boundaryguard.services.conditions.ReasonExpr;
 import me.fulcanelly.tgbridge.boundaryguard.services.messages.minecraft.MinecraftMessageService;
+import me.fulcanelly.tgbridge.boundaryguard.services.restrictions.RestrictionEffect;
 import me.fulcanelly.tgbridge.boundaryguard.services.restrictions.RestrictionService;
 
 import org.bukkit.GameMode;
@@ -59,12 +62,13 @@ class RestrictionEventListenerTest {
         when(event.getNewGameMode()).thenReturn(GameMode.ADVENTURE);
         when(event.getPlayer()).thenReturn(player);
         when(restrictions.isRestricted(player)).thenReturn(true);
-        when(restrictions.unmetReasons(player)).thenReturn(List.of(ConditionReason.TELEGRAM_LINKING));
+        Optional<ReasonExpr> reason = Optional.of(new ReasonExpr.Leaf(ConditionReason.TELEGRAM_LINKING));
+        when(restrictions.unmetReason(player)).thenReturn(reason);
 
         listener.onGameModeChange(event);
 
         verify(restrictions, never()).refresh(any());
-        verify(messages).sendConditionReminder(player, List.of(ConditionReason.TELEGRAM_LINKING));
+        verify(messages).sendConditionReminder(player, reason, List.of(RestrictionEffect.INTERACT_FREELY));
     }
 
     @Test
@@ -84,7 +88,7 @@ class RestrictionEventListenerTest {
         when(event.getPlayer()).thenReturn(player);
         when(player.getGameMode()).thenReturn(GameMode.ADVENTURE);
         when(restrictions.isRestricted(player)).thenReturn(true);
-        when(restrictions.unmetReasons(player)).thenReturn(List.of());
+        when(restrictions.unmetReason(player)).thenReturn(Optional.empty());
 
         listener.onArmSwing(event);
 

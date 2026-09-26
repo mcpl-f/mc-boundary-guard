@@ -1,5 +1,7 @@
 package me.fulcanelly.tgbridge.boundaryguard.services.restrictions;
 
+import java.util.Optional;
+
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
@@ -48,5 +50,15 @@ public interface Restriction {
      */
     default boolean allowsContainerUse(Player player) {
         return true;
+    }
+
+    /**
+     * The {@link RestrictionEffect} this strategy represents, if it has one to
+     * report - used by {@code RestrictionService#activeEffects} so a reminder
+     * that isn't tied to one specific action (e.g. an idle-player check) can
+     * name everything currently active, not just one arbitrarily chosen effect.
+     */
+    default Optional<RestrictionEffect> effect() {
+        return Optional.empty();
     }
 }

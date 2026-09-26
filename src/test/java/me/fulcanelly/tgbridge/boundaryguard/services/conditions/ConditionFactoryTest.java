@@ -2,6 +2,7 @@ package me.fulcanelly.tgbridge.boundaryguard.services.conditions;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import me.fulcanelly.tgbridge.boundaryguard.integrations.tgbridge.TelegramLinkStatusService;
 
@@ -75,7 +76,7 @@ class ConditionFactoryTest {
     }
 
     @Test
-    void allReportsEveryUnmetChildAsAReasonToShowThePlayer() {
+    void allReportsEveryUnmetChildAsAGroupJoinedByAnd() {
         ConditionFactory factory = new ConditionFactory(telegramLinkStatus);
 
         Object tree = Map.of("all", List.of(
@@ -85,13 +86,17 @@ class ConditionFactoryTest {
         when(telegramLinkStatus.isLinked(player)).thenReturn(false);
         when(player.getStatistic(Statistic.PLAY_ONE_MINUTE)).thenReturn(0);
 
+        Optional<ReasonExpr> reason = factory.fromConfig(tree).unmetReason(player);
+
         assertEquals(
-                List.of(ConditionReason.TELEGRAM_LINKING, ConditionReason.PLAYTIME),
-                factory.fromConfig(tree).unmetReasons(player));
+                Optional.of(new ReasonExpr.Group(ConditionApplier.Operator.ALL, List.of(
+                        new ReasonExpr.Leaf(ConditionReason.TELEGRAM_LINKING),
+                        new ReasonExpr.Leaf(ConditionReason.PLAYTIME)))),
+                reason);
     }
 
     @Test
-    void anyReportsNoReasonsOnceOneChildIsAlreadyMet() {
+    void anyReportsNoReasonOnceOneChildIsAlreadyMet() {
         ConditionFactory factory = new ConditionFactory(telegramLinkStatus);
 
         Object tree = Map.of("any", List.of(
@@ -100,12 +105,12 @@ class ConditionFactoryTest {
 
         when(telegramLinkStatus.isLinked(player)).thenReturn(true);
 
-        assertEquals(List.of(), factory.fromConfig(tree).unmetReasons(player));
+        assertEquals(Optional.empty(), factory.fromConfig(tree).unmetReason(player));
         // Nothing left to fix, so the (unmet) playtime child is never consulted.
     }
 
     @Test
-    void anyReportsEveryChildAsAnAlternativeWhenNoneAreMet() {
+    void anyReportsEveryChildAsAGroupJoinedByOrWhenNoneAreMet() {
         ConditionFactory factory = new ConditionFactory(telegramLinkStatus);
 
         Object tree = Map.of("any", List.of(
@@ -115,8 +120,25 @@ class ConditionFactoryTest {
         when(telegramLinkStatus.isLinked(player)).thenReturn(false);
         when(player.getStatistic(Statistic.PLAY_ONE_MINUTE)).thenReturn(0);
 
+        Optional<ReasonExpr> reason = factory.fromConfig(tree).unmetReason(player);
+
         assertEquals(
-                List.of(ConditionReason.TELEGRAM_LINKING, ConditionReason.PLAYTIME),
-                factory.fromConfig(tree).unmetReasons(player));
+                Optional.of(new ReasonExpr.Group(ConditionApplier.Operator.ANY, List.of(
+                        new ReasonExpr.Leaf(ConditionReason.TELEGRAM_LINKING),
+                        new ReasonExpr.Leaf(ConditionReason.PLAYTIME)))),
+                reason);
+    }
+
+    @Test
+    void aSingleUnmetChildIsReportedAsALeafNotAOneElementGroup() {
+        ConditionFactory factory = new ConditionFactory(telegramLinkStatus);
+
+        Object tree = Map.of("any", List.of("tg-linking-check"));
+
+        when(telegramLinkStatus.isLinked(player)).thenReturn(false);
+
+        assertEquals(
+                Optional.of(new ReasonExpr.Leaf(ConditionReason.TELEGRAM_LINKING)),
+                factory.fromConfig(tree).unmetReason(player));
     }
 }

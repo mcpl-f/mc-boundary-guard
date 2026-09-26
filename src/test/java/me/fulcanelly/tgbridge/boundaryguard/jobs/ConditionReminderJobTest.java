@@ -1,9 +1,12 @@
 package me.fulcanelly.tgbridge.boundaryguard.jobs;
 
 import java.util.List;
+import java.util.Optional;
 
 import me.fulcanelly.tgbridge.boundaryguard.services.conditions.ConditionReason;
+import me.fulcanelly.tgbridge.boundaryguard.services.conditions.ReasonExpr;
 import me.fulcanelly.tgbridge.boundaryguard.services.messages.minecraft.MinecraftMessageService;
+import me.fulcanelly.tgbridge.boundaryguard.services.restrictions.RestrictionEffect;
 import me.fulcanelly.tgbridge.boundaryguard.services.restrictions.RestrictionService;
 
 import org.bukkit.Bukkit;
@@ -40,12 +43,17 @@ class ConditionReminderJobTest {
 
             when(restrictions.isRestricted(restrictedPlayer)).thenReturn(true);
             when(restrictions.isRestricted(freePlayer)).thenReturn(false);
-            when(restrictions.unmetReasons(restrictedPlayer)).thenReturn(List.of(ConditionReason.TELEGRAM_LINKING));
+            Optional<ReasonExpr> reason = Optional.of(new ReasonExpr.Leaf(ConditionReason.TELEGRAM_LINKING));
+            when(restrictions.unmetReason(restrictedPlayer)).thenReturn(reason);
+            List<RestrictionEffect> effects = List.of(RestrictionEffect.LEAVE_SPAWN, RestrictionEffect.USE_CONTAINERS);
+            when(restrictions.activeEffects()).thenReturn(effects);
 
             new ConditionReminderJob(restrictions, messages).run();
 
-            verify(messages).sendConditionReminder(restrictedPlayer, List.of(ConditionReason.TELEGRAM_LINKING));
-            verify(messages, never()).sendConditionReminder(eq(freePlayer), any());
+            // Every active effect, not just one - this job isn't tied to any
+            // specific action, unlike RestrictionEventListener's reminders.
+            verify(messages).sendConditionReminder(restrictedPlayer, reason, effects);
+            verify(messages, never()).sendConditionReminder(eq(freePlayer), any(), any());
             // Purely a notification job - it must never apply a Restriction
             // strategy's side effects, only RestrictionRefreshJob does that.
             verify(restrictions, never()).refresh(any());

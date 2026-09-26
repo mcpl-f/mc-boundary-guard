@@ -1,6 +1,5 @@
 package me.fulcanelly.tgbridge.boundaryguard.services.conditions;
 
-import java.util.List;
 import java.util.Optional;
 
 import org.bukkit.Location;
@@ -46,7 +45,7 @@ public interface Condition {
      * The {@link ConditionReason} this leaf condition represents, if it has one to
      * report. Empty for a condition with nothing useful to say on its own -
      * {@link ConditionApplier} is the only current implementation that needs to
-     * override {@link #unmetReasons} directly instead, since it must recurse into
+     * override {@link #unmetReason} directly instead, since it must recurse into
      * its children rather than report a single reason for itself.
      */
     default Optional<ConditionReason> reason() {
@@ -54,15 +53,17 @@ public interface Condition {
     }
 
     /**
-     * Collects the {@link #reason()} of every currently-unmet condition in this
-     * tree, so a combined "here's what you still need" message can be built. The
-     * default (used by every leaf condition) just checks {@link #isMet}; only a
-     * composite needs to override this to walk its children instead.
+     * Builds a {@link ReasonExpr} describing why this condition (and, for a
+     * composite, its children) is currently unmet, preserving the {@code all}/
+     * {@code any} structure so a message can join multiple reasons with "and"/
+     * "or" correctly. The default (used by every leaf condition) just checks
+     * {@link #isMet}; only {@link ConditionApplier} needs to override this to
+     * walk its children instead.
      */
-    default List<ConditionReason> unmetReasons(Player player) {
+    default Optional<ReasonExpr> unmetReason(Player player) {
         if (isMet(player)) {
-            return List.of();
+            return Optional.empty();
         }
-        return reason().map(List::of).orElseGet(List::of);
+        return reason().map(ReasonExpr.Leaf::new);
     }
 }

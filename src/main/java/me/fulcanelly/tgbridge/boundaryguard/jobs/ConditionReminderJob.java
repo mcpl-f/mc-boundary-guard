@@ -14,6 +14,11 @@ import org.bukkit.entity.Player;
  * {@code RestrictionEventListener}'s other reminder paths, so without this job
  * they'd get no feedback at all until they happened to do something.
  *
+ * Passes {@link RestrictionService#activeEffects()} (every enabled strategy's
+ * effect), not just one - unlike a reminder tied to a specific blocked action,
+ * this one isn't triggered by anything the player did, so the useful thing to
+ * say is everything currently true, not an arbitrarily chosen slice of it.
+ *
  * Uses {@link RestrictionService#isRestricted}, not {@code refresh}, since this
  * only needs to read condition state - it has nothing to do with applying a
  * {@code Restriction} strategy's side effects (that's {@link
@@ -29,7 +34,7 @@ public final class ConditionReminderJob implements Runnable {
     public void run() {
         for (Player player : Bukkit.getOnlinePlayers()) {
             if (restrictions.isRestricted(player)) {
-                messages.sendConditionReminder(player, restrictions.unmetReasons(player));
+                messages.sendConditionReminder(player, restrictions.unmetReason(player), restrictions.activeEffects());
             }
         }
     }

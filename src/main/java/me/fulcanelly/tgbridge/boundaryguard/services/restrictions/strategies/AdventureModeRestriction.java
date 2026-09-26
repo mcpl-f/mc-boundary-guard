@@ -1,6 +1,9 @@
 package me.fulcanelly.tgbridge.boundaryguard.services.restrictions.strategies;
 
+import java.util.Optional;
+
 import me.fulcanelly.tgbridge.boundaryguard.services.restrictions.Restriction;
+import me.fulcanelly.tgbridge.boundaryguard.services.restrictions.RestrictionEffect;
 
 import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
@@ -39,5 +42,10 @@ public final class AdventureModeRestriction implements Restriction {
         if (player.getGameMode() == GameMode.ADVENTURE) {
             player.setGameMode(player.getServer().getDefaultGameMode());
         }
+    }
+
+    @Override
+    public Optional<RestrictionEffect> effect() {
+        return Optional.of(RestrictionEffect.INTERACT_FREELY);
     }
 }

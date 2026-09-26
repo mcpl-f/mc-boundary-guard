@@ -114,6 +114,13 @@ public final class BoundaryGuardConfig {
         return source.getString("messages.en." + key, key);
     }
 
+    /** Whether {@code key} resolves to an actual configured value (not the fallback echo). */
+    public boolean hasMessage(String locale, String key) {
+        return source.isSet("messages." + locale + "." + key)
+                || source.isSet("messages." + defaultLocale() + "." + key)
+                || source.isSet("messages.en." + key);
+    }
+
     private Object normalize(Object value) {
         if (value instanceof ConfigurationSection section) {
             return normalize(section.getValues(false));

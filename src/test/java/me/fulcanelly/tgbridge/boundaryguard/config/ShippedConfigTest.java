@@ -116,8 +116,16 @@ class ShippedConfigTest {
         BoundaryGuardConfig config = loadShippedConfig();
 
         assertEquals("ru", config.defaultLocale());
-        for (String key : List.of("blocked", "container-blocked", "bind-button", "bind-hover",
-                "spawn-button", "spawn-hover", "teleported", "already-in-area", "only-player")) {
+        for (String key : List.of(
+                "join.and", "join.or", "join.before", "join.so-that",
+                "reasons.tg-linking.label", "reasons.tg-linking.command", "reasons.tg-linking.hover",
+                "reasons.playtime.label",
+                "reasons.return-to-spawn.label", "reasons.return-to-spawn.command", "reasons.return-to-spawn.hover",
+                "restrictions.leave-spawn.gerund", "restrictions.leave-spawn.infinitive",
+                "restrictions.use-containers.gerund", "restrictions.use-containers.infinitive",
+                "restrictions.interact-freely.gerund", "restrictions.interact-freely.infinitive",
+                "spawn-button", "spawn-hover",
+                "tgspawn-command.teleported", "tgspawn-command.already-in-area", "tgspawn-command.only-player")) {
             assertNotEquals(key, config.message("en", key), "missing en." + key);
             assertNotEquals(key, config.message("ru", key), "missing ru." + key);
         }
