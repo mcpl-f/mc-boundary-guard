@@ -8,8 +8,13 @@ import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 
 /**
- * Forces Adventure Mode on a restricted player inside (or, with {@code everywhere},
- * regardless of) the boundary area.
+ * Forces Adventure Mode on a restricted player once they leave the boundary area
+ * (or, with {@code everywhere}, regardless of location).
+ *
+ * The area is left alone so a restricted player keeps full survival privileges
+ * near spawn (matching this plugin's "build/break/test at spawn" purpose); Adventure
+ * Mode only kicks in once they wander past it, so the wider world stays protected
+ * even without a hard movement block.
  *
  * Restoring uses the server's configured default game mode rather than a saved
  * per-player snapshot. A snapshot lives only in memory, so a server restart would
@@ -25,7 +30,7 @@ public final class AdventureModeRestriction implements Restriction {
 
     @Override
     public void refresh(Player player, boolean restricted) {
-        boolean shouldApply = restricted && (everywhere || boundaryArea.contains(player.getLocation()));
+        boolean shouldApply = restricted && (everywhere || !boundaryArea.contains(player.getLocation()));
 
         if (!shouldApply) {
             restore(player);

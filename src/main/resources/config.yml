@@ -1,10 +1,12 @@
-# Distance from the anchor where unbound players are allowed to move.
-# Normal worlds use world spawn, Nether uses this value divided by 8,
-# and The End uses this value from 0,0.
-allowed-radius: 2048.0
-
 # Avoids spamming the warning on every PlayerMoveEvent.
 message-cooldown-millis: 500.0
+
+# How often (in ticks) restriction state is re-checked for online players, and how
+# long a "not yet linked" Telegram lookup is cached before re-checking tg-bridge.
+telegram-check-interval-ticks: 60
+
+# Used when player locale is unsupported or message is missing.
+default-locale: ru
 
 # Rules decide when restrictions are lifted.
 # `all` requires every listed condition; `any` requires at least one.
@@ -27,29 +29,30 @@ message-cooldown-millis: 500.0
 #         hours: 1.0
 #     - any:
 #         - tg-linking-check: true
-#         - time-played-limit:
-#             hours: 2.5
+#         - ds-linking-check: true # not implemented yet, just for example
+#
 rules:
-  telegram-check-interval-ticks: 60
   condition:
     all:
       - tg-linking-check: true
 
   strategies:
+    # Distance from the anchor where unbound players are allowed to move.
+    # Normal worlds use world spawn, Nether uses this value divided by 8,
+    # and The End uses this value from 0,0.
     keep-on-spawn:
       radius: 2048.0
 
     # Uncomment the block to enable Adventure Mode while restricted.
-    # Set everywhere to true to apply in every world; false limits it to radius.
+    # Set everywhere to true to apply in every world; false will switch to
+    # adventure only once the player is outside of the specified radius
+    # (same Nether/End scaling as keep-on-spawn's radius above).
     # switch-2-adventure-mode:
     #   everywhere: false
-    #   radius: 512.0
+    #   only-outside-of-radius: 512.0
 
     # Uncomment to prevent restricted players from using containers.
     # forbid-container-use: true
-
-# Used when player locale is unsupported or message is missing.
-default-locale: ru
 
 messages:
   en:

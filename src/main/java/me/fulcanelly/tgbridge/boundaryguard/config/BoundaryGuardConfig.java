@@ -14,16 +14,16 @@ import org.bukkit.configuration.file.FileConfiguration;
 @RequiredArgsConstructor
 public final class BoundaryGuardConfig {
 
-    private static final double DEFAULT_ALLOWED_RADIUS = 256.0;
+    // Each restriction strategy owns its own default radius; there is no shared
+    // top-level fallback, so enabling one strategy can never silently pick up a
+    // radius meant for another.
+    private static final double DEFAULT_SPAWN_RADIUS = 256.0;
+    private static final double DEFAULT_ADVENTURE_OUTSIDE_RADIUS = 256.0;
 
     private final FileConfiguration source;
 
-    public double allowedRadius() {
-        return source.getDouble("allowed-radius", DEFAULT_ALLOWED_RADIUS);
-    }
-
     public double spawnRadius() {
-        return source.getDouble("rules.strategies.keep-on-spawn.radius", allowedRadius());
+        return source.getDouble("rules.strategies.keep-on-spawn.radius", DEFAULT_SPAWN_RADIUS);
     }
 
     public boolean spawnBoundaryEnabled() {
@@ -38,8 +38,10 @@ public final class BoundaryGuardConfig {
         return source.getBoolean("rules.strategies.switch-2-adventure-mode.everywhere", false);
     }
 
-    public double adventureModeRadius() {
-        return source.getDouble("rules.strategies.switch-2-adventure-mode.radius", allowedRadius());
+    public double adventureModeOutsideRadius() {
+        return source.getDouble(
+                "rules.strategies.switch-2-adventure-mode.only-outside-of-radius",
+                DEFAULT_ADVENTURE_OUTSIDE_RADIUS);
     }
 
     public boolean containerUseForbidden() {
@@ -51,7 +53,7 @@ public final class BoundaryGuardConfig {
     }
 
     public long telegramCheckIntervalTicks() {
-        return Math.max(1L, source.getLong("rules.telegram-check-interval-ticks", 60L));
+        return Math.max(1L, source.getLong("telegram-check-interval-ticks", 60L));
     }
 
     public Object conditionDefinition() {

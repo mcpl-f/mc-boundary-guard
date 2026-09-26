@@ -26,7 +26,7 @@ public final class RestrictionFactory {
 
         if (config.adventureModeEnabled()) {
             restrictions.add(new AdventureModeRestriction(
-                    new BoundaryArea(config.adventureModeRadius()),
+                    new BoundaryArea(config.adventureModeOutsideRadius()),
                     config.adventureModeEverywhere()));
         }
 

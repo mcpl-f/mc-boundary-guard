@@ -19,17 +19,16 @@ class BoundaryGuardConfigTest {
     }
 
     @Test
-    void spawnRadiusFallsBackToAllowedRadiusWhenNotConfigured() {
-        BoundaryGuardConfig config = configFrom("allowed-radius: 300\n");
+    void spawnRadiusUsesItsOwnDefaultWhenNotConfigured() {
+        BoundaryGuardConfig config = configFrom("message-cooldown-millis: 500\n");
 
-        assertEquals(300.0, config.spawnRadius());
+        assertEquals(256.0, config.spawnRadius());
         assertFalse(config.spawnBoundaryEnabled());
     }
 
     @Test
-    void keepOnSpawnAcceptsItsOwnRadiusIndependentOfAllowedRadius() {
+    void keepOnSpawnAcceptsItsOwnRadius() {
         BoundaryGuardConfig config = configFrom("""
-                allowed-radius: 300
                 rules:
                   strategies:
                     keep-on-spawn:
@@ -41,27 +40,39 @@ class BoundaryGuardConfigTest {
     }
 
     @Test
-    void adventureModeReadsEverywhereAndRadiusIndependently() {
+    void adventureModeReadsEverywhereAndOutsideRadiusIndependently() {
         BoundaryGuardConfig config = configFrom("""
-                allowed-radius: 300
                 rules:
                   strategies:
                     switch-2-adventure-mode:
                       everywhere: true
-                      radius: 50
+                      only-outside-of-radius: 50
                 """);
 
         assertTrue(config.adventureModeEnabled());
         assertTrue(config.adventureModeEverywhere());
-        assertEquals(50.0, config.adventureModeRadius());
+        assertEquals(50.0, config.adventureModeOutsideRadius());
+    }
+
+    @Test
+    void adventureModeOutsideRadiusIsIndependentFromSpawnRadius() {
+        BoundaryGuardConfig config = configFrom("""
+                rules:
+                  strategies:
+                    keep-on-spawn:
+                      radius: 2000
+                    switch-2-adventure-mode:
+                      everywhere: false
+                """);
+
+        // No explicit "only-outside-of-radius" -> its own default, not keep-on-spawn's radius.
+        assertEquals(256.0, config.adventureModeOutsideRadius());
+        assertEquals(2000.0, config.spawnRadius());
     }
 
     @Test
     void telegramCheckIntervalIsClampedToAtLeastOneTick() {
-        BoundaryGuardConfig config = configFrom("""
-                rules:
-                  telegram-check-interval-ticks: 0
-                """);
+        BoundaryGuardConfig config = configFrom("telegram-check-interval-ticks: 0\n");
 
         assertEquals(1L, config.telegramCheckIntervalTicks());
     }
