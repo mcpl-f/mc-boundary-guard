@@ -1,10 +1,6 @@
 # Avoids spamming the warning on every PlayerMoveEvent.
 message-cooldown-millis: 500.0
 
-# How often (in ticks) restriction state is re-checked for online players, and how
-# long a "not yet linked" Telegram lookup is cached before re-checking tg-bridge.
-telegram-check-interval-ticks: 60
-
 # Used when player locale is unsupported or message is missing.
 default-locale: ru
 
@@ -53,6 +49,13 @@ rules:
 
     # Uncomment to prevent restricted players from using containers.
     # forbid-container-use: true
+
+# How often (in ticks) restriction state is re-checked for online players.
+restriction-refresh-interval-ticks: 60
+
+# How long (in milliseconds) a "not yet linked" Telegram lookup is cached before
+# re-checking tg-bridge for that player.
+telegram-recheck-cooldown-millis: 300
 
 messages:
   en:

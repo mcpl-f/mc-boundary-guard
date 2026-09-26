@@ -6,12 +6,14 @@ import me.fulcanelly.tgbridge.boundaryguard.services.messages.minecraft.Minecraf
 import me.fulcanelly.tgbridge.boundaryguard.services.restrictions.RestrictionService;
 
 import org.bukkit.entity.Player;
+import org.bukkit.event.Cancellable;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
@@ -36,32 +38,30 @@ public final class RestrictionEventListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onInventoryOpen(InventoryOpenEvent event) {
-        if (!(event.getPlayer() instanceof Player player)
-                || !restrictions.blocksContainerUse(player, event.getInventory().getType())) {
-            return;
+        if (event.getPlayer() instanceof Player player) {
+            blockIfRestricted(event, player, event.getInventory().getType());
         }
-        event.setCancelled(true);
-        messages.sendContainerBlocked(player);
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onInventoryClick(InventoryClickEvent event) {
-        if (!(event.getWhoClicked() instanceof Player player)
-            || !restrictions.blocksContainerUse(player, event.getView().getTopInventory().getType())) {
-            return;
+        if (event.getWhoClicked() instanceof Player player) {
+            blockIfRestricted(event, player, event.getView().getTopInventory().getType());
         }
-        event.setCancelled(true);
-        messages.sendContainerBlocked(player);
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onInventoryDrag(InventoryDragEvent event) {
-        if (!(event.getWhoClicked() instanceof Player player)
-            || !restrictions.blocksContainerUse(player, event.getView().getTopInventory().getType())) {
+        if (event.getWhoClicked() instanceof Player player) {
+            blockIfRestricted(event, player, event.getView().getTopInventory().getType());
+        }
+    }
+
+    private void blockIfRestricted(Cancellable event, Player player, InventoryType type) {
+        if (!restrictions.blocksContainerUse(player, type)) {
             return;
         }
         event.setCancelled(true);
         messages.sendContainerBlocked(player);
     }
-
 }

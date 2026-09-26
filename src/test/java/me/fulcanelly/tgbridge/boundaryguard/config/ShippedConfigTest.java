@@ -87,10 +87,11 @@ class ShippedConfigTest {
     }
 
     @Test
-    void telegramCheckIntervalMatchesTheShippedValue() {
+    void refreshAndTelegramCooldownSettingsMatchTheShippedValues() {
         BoundaryGuardConfig config = loadShippedConfig();
 
-        assertEquals(60L, config.telegramCheckIntervalTicks());
+        assertEquals(60L, config.restrictionRefreshIntervalTicks());
+        assertEquals(300L, config.telegramRecheckCooldownMillis());
     }
 
     @Test

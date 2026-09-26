@@ -71,10 +71,21 @@ class BoundaryGuardConfigTest {
     }
 
     @Test
-    void telegramCheckIntervalIsClampedToAtLeastOneTick() {
-        BoundaryGuardConfig config = configFrom("telegram-check-interval-ticks: 0\n");
+    void restrictionRefreshIntervalIsClampedToAtLeastOneTick() {
+        BoundaryGuardConfig config = configFrom("restriction-refresh-interval-ticks: 0\n");
 
-        assertEquals(1L, config.telegramCheckIntervalTicks());
+        assertEquals(1L, config.restrictionRefreshIntervalTicks());
+    }
+
+    @Test
+    void telegramRecheckCooldownIsClampedToAtLeastOneMillisAndIsIndependentFromTheRefreshInterval() {
+        BoundaryGuardConfig config = configFrom("""
+                restriction-refresh-interval-ticks: 100
+                telegram-recheck-cooldown-millis: 0
+                """);
+
+        assertEquals(100L, config.restrictionRefreshIntervalTicks());
+        assertEquals(1L, config.telegramRecheckCooldownMillis());
     }
 
     @Test

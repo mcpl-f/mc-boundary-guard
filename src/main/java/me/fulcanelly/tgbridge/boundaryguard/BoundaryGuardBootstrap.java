@@ -41,8 +41,9 @@ public final class BoundaryGuardBootstrap {
         MinecraftMessageService messages = new MinecraftMessageService(config, config.warningCooldownMillis());
         RestrictionFactory.Setup restrictionSetup = new RestrictionFactory(config).create();
 
-        long refreshPeriodTicks = config.telegramCheckIntervalTicks();
-        TelegramLinkStatusService telegramLinkStatus = new TelegramLinkStatusService(reception, refreshPeriodTicks * 50L);
+        long refreshPeriodTicks = config.restrictionRefreshIntervalTicks();
+        TelegramLinkStatusService telegramLinkStatus =
+                new TelegramLinkStatusService(reception, config.telegramRecheckCooldownMillis());
 
         Condition condition = createCondition(telegramLinkStatus, config.conditionDefinition());
         RestrictionService restrictions = new RestrictionService(condition, restrictionSetup.restrictions());

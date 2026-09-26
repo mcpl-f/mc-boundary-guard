@@ -52,8 +52,12 @@ public final class BoundaryGuardConfig {
         return Math.round(source.getDouble("message-cooldown-millis", 500.0));
     }
 
-    public long telegramCheckIntervalTicks() {
-        return Math.max(1L, source.getLong("telegram-check-interval-ticks", 60L));
+    public long restrictionRefreshIntervalTicks() {
+        return Math.max(1L, source.getLong("restriction-refresh-interval-ticks", 60L));
+    }
+
+    public long telegramRecheckCooldownMillis() {
+        return Math.max(1L, source.getLong("telegram-recheck-cooldown-millis", 3000L));
     }
 
     public Object conditionDefinition() {

@@ -29,15 +29,12 @@ public final class BoundaryArea {
         return dx * dx + dz * dz <= radius * radius;
     }
 
+    // Every world, The End included, has a tracked spawn location - using it
+    // uniformly avoids guessing a fixed (0,0) column that might have no solid
+    // ground (e.g. terrain broken near the anchor point) and would drop the
+    // player into the void.
     public Location getTeleportLocation(World world) {
-        if (world.getEnvironment() != World.Environment.THE_END) {
-            return world.getSpawnLocation();
-        }
-
-        int x = 0;
-        int z = 0;
-        int y = world.getHighestBlockYAt(x, z) + 1;
-        return new Location(world, x + 0.5, y, z + 0.5);
+        return world.getSpawnLocation();
     }
 
     private Location getAnchor(World world) {
