@@ -4,7 +4,8 @@ import lombok.RequiredArgsConstructor;
 import me.fulcanelly.tgbridge.boundaryguard.domain.BoundaryArea;
 import me.fulcanelly.tgbridge.boundaryguard.services.messages.minecraft.MinecraftMessageService;
 
-import org.bukkit.ChatColor;
+import net.md_5.bungee.api.ChatColor;
+
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;

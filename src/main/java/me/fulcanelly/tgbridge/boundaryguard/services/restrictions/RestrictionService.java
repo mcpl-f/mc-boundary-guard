@@ -52,6 +52,8 @@ public final class RestrictionService {
         return isContainer(inventoryType) && !allowsContainerUse(player);
     }
 
+    // InventoryType has no built-in "is a container" predicate, so the block-like
+    // types this restriction cares about are listed explicitly.
     private boolean isContainer(InventoryType type) {
         switch (type) {
             case CHEST:
