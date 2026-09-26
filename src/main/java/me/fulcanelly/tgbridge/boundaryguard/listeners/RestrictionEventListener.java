@@ -30,7 +30,6 @@ public final class RestrictionEventListener implements Listener {
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
-        restrictions.forget(player);
         telegramLinkStatus.forget(player);
         messages.forget(player);
     }

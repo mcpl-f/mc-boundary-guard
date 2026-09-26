@@ -5,6 +5,16 @@ import lombok.RequiredArgsConstructor;
 import org.bukkit.Location;
 import org.bukkit.World;
 
+/**
+ * A circular area around a per-world anchor, used to decide whether a location
+ * counts as inside the sandbox.
+ *
+ * The anchor and radius depend on the world: normal worlds use the world's spawn
+ * location; the Nether also uses spawn but divides the radius by 8 to match its
+ * coordinate scaling relative to the Overworld; the End uses real {@code 0,0}
+ * instead of its spawn location, since the End's spawn platform is not a
+ * meaningful "center" for this plugin's sandbox.
+ */
 @RequiredArgsConstructor
 public final class BoundaryArea {
 

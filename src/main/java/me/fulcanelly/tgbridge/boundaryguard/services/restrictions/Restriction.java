@@ -6,11 +6,16 @@ import org.bukkit.entity.Player;
 /**
  * Applies one kind of limitation while a player's access condition is unmet.
  *
- * A strategy only needs to override the methods for actions or state it controls.
- * The defaults mean that it does not affect that action and has no temporary
- * state to update or clear. For example, a spawn-boundary strategy overrides
- * {@link #allowsMovement(Player, Location)}, while Adventure Mode uses
- * {@link #refresh(Player, boolean)} and {@link #forget(Player)}.
+ * A strategy only needs to override the methods for actions it controls. The
+ * defaults mean that it does not affect that action. For example, a spawn-boundary
+ * strategy overrides {@link #allowsMovement(Player, Location)}, while Adventure Mode
+ * uses {@link #refresh(Player, boolean)} to apply and restore the game mode.
+ *
+ * There is deliberately no cleanup/forget hook here: none of the current strategies
+ * keep per-player state that must be cleared on quit or shutdown (Adventure Mode
+ * restores via the server default game mode, not a saved snapshot). A strategy that
+ * does need such state should expose its own cleanup contract instead of adding an
+ * empty hook that every other strategy would have to ignore.
  */
 public interface Restriction {
 
@@ -43,14 +48,5 @@ public interface Restriction {
      */
     default boolean allowsContainerUse(Player player) {
         return true;
-    }
-
-    /**
-     * Clears per-player state when the player quits or the plugin shuts down.
-     *
-     * Stateful strategies should undo temporary changes here, such as restoring a
-     * saved game mode. Stateless strategies do not need to override this method.
-     */
-    default void forget(Player player) {
     }
 }

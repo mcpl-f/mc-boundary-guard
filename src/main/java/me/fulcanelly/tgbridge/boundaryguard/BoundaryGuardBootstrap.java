@@ -51,7 +51,7 @@ public final class BoundaryGuardBootstrap {
         registerCommand(restrictionSetup.spawnArea(), messages);
         BukkitTask refreshTask = scheduleRefresh(restrictions, refreshPeriodTicks);
 
-        return new BoundaryGuardRuntime(plugin, telegramLinkStatus, restrictions, refreshTask);
+        return new BoundaryGuardRuntime(plugin, telegramLinkStatus, refreshTask);
     }
 
     private void registerListeners(

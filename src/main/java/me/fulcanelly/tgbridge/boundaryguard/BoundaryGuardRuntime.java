@@ -3,7 +3,6 @@ package me.fulcanelly.tgbridge.boundaryguard;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import me.fulcanelly.tgbridge.boundaryguard.integrations.tgbridge.TelegramLinkStatusService;
-import me.fulcanelly.tgbridge.boundaryguard.services.restrictions.RestrictionService;
 
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
@@ -20,13 +19,11 @@ public final class BoundaryGuardRuntime {
 
     private final BoundaryGuardPlugin plugin;
     private final TelegramLinkStatusService telegramLinkStatus;
-    private final RestrictionService restrictions;
     private final BukkitTask refreshTask;
 
     public void stop() {
         refreshTask.cancel();
         for (Player player : plugin.getServer().getOnlinePlayers()) {
-            restrictions.forget(player);
             telegramLinkStatus.forget(player);
         }
     }

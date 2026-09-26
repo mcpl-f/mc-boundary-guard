@@ -10,6 +10,15 @@ import me.fulcanelly.tgbridge.tools.twofactor.register.SignupLoginReception;
 
 import org.bukkit.entity.Player;
 
+/**
+ * Tracks whether a player has linked Telegram, so restriction refreshes don't have
+ * to query tg-bridge every time.
+ *
+ * A positive result is cached for the rest of the login session, since linking
+ * cannot be undone in-game. A negative result is cached only for
+ * {@code negativeCacheMillis}, so an unlinked player is re-checked periodically
+ * instead of hitting {@code reception.getTgByUser} on every single refresh.
+ */
 public final class TelegramLinkStatusService {
 
     private final SignupLoginReception reception;

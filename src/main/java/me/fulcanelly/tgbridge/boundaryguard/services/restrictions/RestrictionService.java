@@ -8,6 +8,16 @@ import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
+/**
+ * Coordinates the access {@link Condition} with the configured {@link Restriction}
+ * strategies.
+ *
+ * {@link Restriction#refresh(Player, boolean)} is triggered both as a side effect of
+ * {@link #allowsMovement} / {@link #allowsContainerUse} (so a stateful strategy like
+ * Adventure Mode stays in sync with every gameplay check) and independently on join
+ * and on a periodic timer, since a restricted player can go a while without
+ * triggering any check yet still needs the restriction applied or lifted.
+ */
 public final class RestrictionService {
 
     private final Condition accessCondition;
@@ -40,10 +50,6 @@ public final class RestrictionService {
 
     public boolean blocksContainerUse(Player player, InventoryType inventoryType) {
         return isContainer(inventoryType) && !allowsContainerUse(player);
-    }
-
-    public void forget(Player player) {
-        restrictions.forEach(restriction -> restriction.forget(player));
     }
 
     private boolean isContainer(InventoryType type) {
