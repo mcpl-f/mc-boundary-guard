@@ -27,47 +27,58 @@ class BoundaryGuardConfigTest {
     }
 
     @Test
-    void keepOnSpawnAcceptsItsOwnRadius() {
+    void keepOnSpawnIsASimpleBooleanToggle() {
         BoundaryGuardConfig config = configFrom("""
                 rules:
                   strategies:
-                    keep-on-spawn:
-                      radius: 120
+                    keep-on-spawn: true
                 """);
 
         assertTrue(config.spawnBoundaryEnabled());
+    }
+
+    @Test
+    void spawnRadiusIsReadFromTheInSpawnRadiusConditionLeaf() {
+        BoundaryGuardConfig config = configFrom("""
+                rules:
+                  condition:
+                    any:
+                      - in-spawn-radius: 120
+                """);
+
         assertEquals(120.0, config.spawnRadius());
     }
 
     @Test
-    void adventureModeReadsEverywhereAndOutsideRadiusIndependently() {
+    void spawnRadiusIsFoundNoMatterHowDeeplyNestedInAllOrAny() {
         BoundaryGuardConfig config = configFrom("""
                 rules:
-                  strategies:
-                    switch-2-adventure-mode:
-                      everywhere: true
-                      only-outside-of-radius: 50
+                  condition:
+                    all:
+                      - tg-linking-check: true
+                      - any:
+                          - in-spawn-radius: 777
                 """);
 
-        assertTrue(config.adventureModeEnabled());
-        assertTrue(config.adventureModeEverywhere());
-        assertEquals(50.0, config.adventureModeOutsideRadius());
+        assertEquals(777.0, config.spawnRadius());
     }
 
     @Test
-    void adventureModeOutsideRadiusIsIndependentFromSpawnRadius() {
+    void adventureModeIsASimpleBooleanToggle() {
         BoundaryGuardConfig config = configFrom("""
                 rules:
                   strategies:
-                    keep-on-spawn:
-                      radius: 2000
-                    switch-2-adventure-mode:
-                      everywhere: false
+                    switch-2-adventure-mode: true
                 """);
 
-        // No explicit "only-outside-of-radius" -> its own default, not keep-on-spawn's radius.
-        assertEquals(256.0, config.adventureModeOutsideRadius());
-        assertEquals(2000.0, config.spawnRadius());
+        assertTrue(config.adventureModeEnabled());
+    }
+
+    @Test
+    void adventureModeDefaultsToDisabled() {
+        BoundaryGuardConfig config = configFrom("rules:\n  strategies: {}\n");
+
+        assertFalse(config.adventureModeEnabled());
     }
 
     @Test
@@ -86,6 +97,20 @@ class BoundaryGuardConfigTest {
 
         assertEquals(100L, config.restrictionRefreshIntervalTicks());
         assertEquals(1L, config.telegramRecheckCooldownMillis());
+    }
+
+    @Test
+    void conditionReminderIntervalConvertsSecondsToTicks() {
+        BoundaryGuardConfig config = configFrom("condition-reminder-interval-seconds: 3\n");
+
+        assertEquals(60L, config.conditionReminderIntervalTicks());
+    }
+
+    @Test
+    void conditionReminderIntervalIsClampedToAtLeastOneTick() {
+        BoundaryGuardConfig config = configFrom("condition-reminder-interval-seconds: 0\n");
+
+        assertEquals(1L, config.conditionReminderIntervalTicks());
     }
 
     @Test

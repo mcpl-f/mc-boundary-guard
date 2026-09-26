@@ -41,7 +41,7 @@ public final class MinecraftMessageService {
 
     public void sendContainerBlocked(Player player) {
         if (tryWarn(player)) {
-            player.sendMessage(get(player, "container-blocked"));
+            player.sendMessage(ChatColor.RED + get(player, "container-blocked"));
         }
     }
 
@@ -66,7 +66,7 @@ public final class MinecraftMessageService {
                 .distinct()
                 .map(reason -> get(player, messageKeyFor(reason)))
                 .collect(Collectors.joining("\n"));
-        player.sendMessage(combined);
+        player.sendMessage(ChatColor.RED + combined);
     }
 
     // The only place that needs to know a ConditionReason maps to a messages.*
@@ -101,7 +101,7 @@ public final class MinecraftMessageService {
         register.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/tg account register"));
         register.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text(get(player, "bind-hover"))));
 
-        TextComponent spawn = new TextComponent(ChatColor.YELLOW + " " + get(player, "spawn-button"));
+        TextComponent spawn = new TextComponent(ChatColor.GREEN + " " + get(player, "spawn-button"));
         spawn.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/tgspawn"));
         spawn.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text(get(player, "spawn-hover"))));
 

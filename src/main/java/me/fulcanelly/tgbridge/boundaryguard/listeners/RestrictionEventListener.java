@@ -11,12 +11,12 @@ import org.bukkit.event.Cancellable;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.player.PlayerAnimationEvent;
 import org.bukkit.event.player.PlayerGameModeChangeEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -71,10 +71,8 @@ public final class RestrictionEventListener implements Listener {
 
     // Adventure Mode itself is silent - the player just finds themselves unable to
     // interact with the world, with no message from this plugin explaining why.
-    // These three handlers close that gap: once right when they're switched into
-    // it, and again on every attempt to break/place a block while in it, since a
-    // Bukkit event still fires there regardless of whether vanilla's own
-    // CanDestroy/CanPlaceOn check ends up allowing the interaction.
+    // These handlers close that gap: once right when they're switched into it,
+    // and again on every attempt to interact with the world while in it.
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onGameModeChange(PlayerGameModeChangeEvent event) {
@@ -83,11 +81,20 @@ public final class RestrictionEventListener implements Listener {
         }
     }
 
+    // NOT BlockBreakEvent: in Adventure Mode, vanilla's CanDestroy check rejects a
+    // break attempt before a BlockBreakEvent is ever created, so a denied attempt
+    // never reaches a BlockBreakEvent listener (confirmed live - see
+    // features/restriction-condition-feedback.md). PlayerAnimationEvent is the
+    // arm-swing itself, which fires unconditionally on left-click; it can't tell
+    // whether they were aiming at a block or just swinging at air, but that's an
+    // acceptable trade for getting a signal at all.
     @EventHandler(priority = EventPriority.MONITOR)
-    public void onBlockBreak(BlockBreakEvent event) {
+    public void onArmSwing(PlayerAnimationEvent event) {
         remindIfBlockedByAdventureMode(event.getPlayer());
     }
 
+    // Placing likely has the same CanPlaceOn gap as breaking, unconfirmed - kept
+    // as-is since only the break case has been observed failing so far.
     @EventHandler(priority = EventPriority.MONITOR)
     public void onBlockPlace(BlockPlaceEvent event) {
         remindIfBlockedByAdventureMode(event.getPlayer());
@@ -99,8 +106,21 @@ public final class RestrictionEventListener implements Listener {
         }
     }
 
+    // Must call isRestricted(), never refresh(), here. Sequence if it did:
+    // 1. AdventureModeRestriction.refresh() calls player.setGameMode(ADVENTURE).
+    // 2. Bukkit fires PlayerGameModeChangeEvent from inside that same call,
+    //    before the player's mode is actually updated - so getGameMode() still
+    //    returns the OLD mode at this point.
+    // 3. onGameModeChange (below) handles that event and would call
+    //    restrictions.refresh(player) again.
+    // 4. That re-runs AdventureModeRestriction.refresh(), which still sees the
+    //    old mode, so it calls setGameMode(ADVENTURE) again -> back to step 2.
+    // This repeats until the stack overflows and the server thread crashes
+    // (happened on a live server; see features/restriction-condition-feedback.md).
+    // isRestricted() only reads accessCondition.isMet() - it never touches a
+    // Restriction strategy, so it cannot re-enter this loop.
     private void remindIfRestricted(Player player) {
-        if (restrictions.refresh(player)) {
+        if (restrictions.isRestricted(player)) {
             messages.sendConditionReminder(player, restrictions.unmetReasons(player));
         }
     }

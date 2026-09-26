@@ -36,7 +36,13 @@ public final class RestrictionService {
     }
 
     public boolean allowsMovement(Player player, Location destination) {
-        if (!refresh(player)) {
+        // Still applies every strategy's current-position side effects (e.g. a
+        // gamemode switch), but the gate below is evaluated at the DESTINATION, not
+        // the player's current spot. A location-dependent condition (in-spawn-radius)
+        // can be true right now and false one step later; short-circuiting on the
+        // current position would let that one crossing step through unchecked.
+        refresh(player);
+        if (accessCondition.isMet(player, destination)) {
             return true;
         }
         return restrictions.stream().allMatch(restriction -> restriction.allowsMovement(player, destination));
@@ -51,6 +57,20 @@ public final class RestrictionService {
 
     public boolean blocksContainerUse(Player player, InventoryType inventoryType) {
         return isContainer(inventoryType) && !allowsContainerUse(player);
+    }
+
+    /**
+     * Whether this player is currently restricted, without applying anything.
+     *
+     * Unlike {@link #refresh}, this never touches a {@link Restriction} strategy -
+     * safe to call from a listener that may itself be running nested inside a
+     * strategy's own side effect (e.g. a {@code PlayerGameModeChangeEvent} fired
+     * from inside {@code AdventureModeRestriction}'s own {@code setGameMode} call).
+     * Calling {@link #refresh} there would re-enter that same strategy and, since
+     * the event fires before the mode is actually applied, loop forever.
+     */
+    public boolean isRestricted(Player player) {
+        return !accessCondition.isMet(player);
     }
 
     /** What this player still needs to satisfy, for a player-facing reminder message. */

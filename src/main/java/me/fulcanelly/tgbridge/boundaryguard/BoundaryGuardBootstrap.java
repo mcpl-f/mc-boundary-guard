@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import me.fulcanelly.tgbridge.boundaryguard.config.BoundaryGuardConfig;
 import me.fulcanelly.tgbridge.boundaryguard.domain.BoundaryArea;
 import me.fulcanelly.tgbridge.boundaryguard.integrations.tgbridge.TelegramLinkStatusService;
+import me.fulcanelly.tgbridge.boundaryguard.jobs.ConditionReminderJob;
 import me.fulcanelly.tgbridge.boundaryguard.jobs.RestrictionRefreshJob;
 import me.fulcanelly.tgbridge.boundaryguard.listeners.BoundaryMoveListener;
 import me.fulcanelly.tgbridge.boundaryguard.listeners.RestrictionEventListener;
@@ -51,8 +52,10 @@ public final class BoundaryGuardBootstrap {
         registerListeners(restrictions, telegramLinkStatus, messages);
         registerCommand(restrictionSetup.spawnArea(), messages);
         BukkitTask refreshTask = scheduleRefresh(restrictions, refreshPeriodTicks);
+        BukkitTask conditionReminderTask = scheduleConditionReminder(
+                restrictions, messages, config.conditionReminderIntervalTicks());
 
-        return new BoundaryGuardRuntime(refreshTask);
+        return new BoundaryGuardRuntime(refreshTask, conditionReminderTask);
     }
 
     private void registerListeners(
@@ -83,6 +86,17 @@ public final class BoundaryGuardBootstrap {
                 .runTaskTimer(
                         plugin,
                         new RestrictionRefreshJob(restrictions),
+                        periodTicks,
+                        periodTicks);
+    }
+
+    private BukkitTask scheduleConditionReminder(
+            RestrictionService restrictions, MinecraftMessageService messages, long periodTicks) {
+        return plugin.getServer()
+                .getScheduler()
+                .runTaskTimer(
+                        plugin,
+                        new ConditionReminderJob(restrictions, messages),
                         periodTicks,
                         periodTicks);
     }

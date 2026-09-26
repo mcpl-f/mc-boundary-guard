@@ -10,8 +10,11 @@ import me.fulcanelly.tgbridge.boundaryguard.services.conditions.Condition;
 import me.fulcanelly.tgbridge.boundaryguard.services.conditions.ConditionFactory;
 import me.fulcanelly.tgbridge.boundaryguard.services.restrictions.Restriction;
 import me.fulcanelly.tgbridge.boundaryguard.services.restrictions.RestrictionFactory;
+import me.fulcanelly.tgbridge.boundaryguard.services.restrictions.strategies.AdventureModeRestriction;
 import me.fulcanelly.tgbridge.boundaryguard.services.restrictions.strategies.SpawnBoundaryRestriction;
 
+import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.junit.jupiter.api.Test;
@@ -25,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
@@ -52,35 +56,47 @@ class ShippedConfigTest {
         }
     }
 
+    // The shipped config.yml ships with exactly one of keep-on-spawn /
+    // switch-2-adventure-mode active at a time (both are valid defaults to
+    // demonstrate) - this checks internal consistency (exactly one strategy,
+    // matching whichever flag is actually set) rather than hardcoding which.
     @Test
-    void onlyKeepOnSpawnIsEnabledByDefault() {
+    void exactlyOneMovementStrategyIsEnabledAndMatchesTheShippedFlags() {
         BoundaryGuardConfig config = loadShippedConfig();
 
-        assertTrue(config.spawnBoundaryEnabled());
-        assertEquals(2048.0, config.spawnRadius());
-        assertFalse(config.adventureModeEnabled());
         assertFalse(config.containerUseForbidden());
-    }
-
-    @Test
-    void restrictionFactoryBuildsExactlyTheSpawnBoundaryStrategy() {
-        BoundaryGuardConfig config = loadShippedConfig();
+        assertEquals(2048.0, config.spawnRadius());
+        assertTrue(
+                config.spawnBoundaryEnabled() ^ config.adventureModeEnabled(),
+                "expected exactly one of keep-on-spawn / switch-2-adventure-mode enabled");
 
         RestrictionFactory.Setup setup = new RestrictionFactory(config).create();
         List<Restriction> restrictions = setup.restrictions();
 
         assertEquals(1, restrictions.size());
-        assertInstanceOf(SpawnBoundaryRestriction.class, restrictions.get(0));
+        if (config.spawnBoundaryEnabled()) {
+            assertInstanceOf(SpawnBoundaryRestriction.class, restrictions.get(0));
+        } else {
+            assertInstanceOf(AdventureModeRestriction.class, restrictions.get(0));
+        }
     }
 
     @Test
-    void defaultConditionRequiresTelegramLinking() {
+    void defaultConditionRequiresTelegramLinkingUnlessAlreadyInsideTheSpawnArea() {
         BoundaryGuardConfig config = loadShippedConfig();
 
         Condition condition = new ConditionFactory(telegramLinkStatus).fromConfig(config.conditionDefinition());
 
+        World world = mock(World.class);
+        when(world.getEnvironment()).thenReturn(World.Environment.NORMAL);
+        when(world.getSpawnLocation()).thenReturn(new Location(world, 0, 64, 0));
+
         when(telegramLinkStatus.isLinked(player)).thenReturn(false);
+        when(player.getLocation()).thenReturn(new Location(world, 5000, 64, 0)); // outside 2048
         assertFalse(condition.isMet(player));
+
+        when(player.getLocation()).thenReturn(new Location(world, 100, 64, 0)); // inside 2048
+        assertTrue(condition.isMet(player));
 
         when(telegramLinkStatus.isLinked(player)).thenReturn(true);
         assertTrue(condition.isMet(player));
@@ -92,6 +108,7 @@ class ShippedConfigTest {
 
         assertEquals(60L, config.restrictionRefreshIntervalTicks());
         assertEquals(300L, config.telegramRecheckCooldownMillis());
+        assertEquals(40L, config.conditionReminderIntervalTicks());
     }
 
     @Test

@@ -14,34 +14,61 @@ import org.bukkit.configuration.file.FileConfiguration;
 @RequiredArgsConstructor
 public final class BoundaryGuardConfig {
 
-    // Each restriction strategy owns its own default radius; there is no shared
-    // top-level fallback, so enabling one strategy can never silently pick up a
-    // radius meant for another.
+    // Used only when rules.condition has no in-spawn-radius leaf at all, so a
+    // keep-on-spawn: true with nothing to size it still has a sane area.
     private static final double DEFAULT_SPAWN_RADIUS = 256.0;
-    private static final double DEFAULT_ADVENTURE_OUTSIDE_RADIUS = 256.0;
+
+    private static final long TICKS_PER_SECOND = 20L;
 
     private final FileConfiguration source;
 
+    /**
+     * The shared spawn-area radius, read from the {@code in-spawn-radius} leaf
+     * inside {@code rules.condition} (wherever it is in the tree - {@code all},
+     * {@code any}, nested or not). There is deliberately no separate
+     * {@code keep-on-spawn.radius}: the area a player must stay inside to count as
+     * unrestricted, and the area {@code keep-on-spawn} physically confines them
+     * to, are the same area, so it's defined once.
+     */
     public double spawnRadius() {
-        return source.getDouble("rules.strategies.keep-on-spawn.radius", DEFAULT_SPAWN_RADIUS);
+        double found = findInSpawnRadius(source.get("rules.condition"));
+        return Double.isNaN(found) ? DEFAULT_SPAWN_RADIUS : found;
+    }
+
+    private double findInSpawnRadius(Object node) {
+        if (node instanceof ConfigurationSection section) {
+            return findInSpawnRadius(section.getValues(false));
+        }
+        if (node instanceof Map<?, ?> map) {
+            Object radius = map.get("in-spawn-radius");
+            if (radius instanceof Number number) {
+                return number.doubleValue();
+            }
+            for (Object value : map.values()) {
+                double found = findInSpawnRadius(value);
+                if (!Double.isNaN(found)) {
+                    return found;
+                }
+            }
+            return Double.NaN;
+        }
+        if (node instanceof List<?> list) {
+            for (Object item : list) {
+                double found = findInSpawnRadius(item);
+                if (!Double.isNaN(found)) {
+                    return found;
+                }
+            }
+        }
+        return Double.NaN;
     }
 
     public boolean spawnBoundaryEnabled() {
-        return source.isConfigurationSection("rules.strategies.keep-on-spawn");
+        return source.getBoolean("rules.strategies.keep-on-spawn", false);
     }
 
     public boolean adventureModeEnabled() {
-        return source.isConfigurationSection("rules.strategies.switch-2-adventure-mode");
-    }
-
-    public boolean adventureModeEverywhere() {
-        return source.getBoolean("rules.strategies.switch-2-adventure-mode.everywhere", false);
-    }
-
-    public double adventureModeOutsideRadius() {
-        return source.getDouble(
-                "rules.strategies.switch-2-adventure-mode.only-outside-of-radius",
-                DEFAULT_ADVENTURE_OUTSIDE_RADIUS);
+        return source.getBoolean("rules.strategies.switch-2-adventure-mode", false);
     }
 
     public boolean containerUseForbidden() {
@@ -58,6 +85,11 @@ public final class BoundaryGuardConfig {
 
     public long telegramRecheckCooldownMillis() {
         return Math.max(1L, source.getLong("telegram-recheck-cooldown-millis", 3000L));
+    }
+
+    /** How often, in ticks, an idle restricted player is reminded what they still need to satisfy. */
+    public long conditionReminderIntervalTicks() {
+        return Math.max(1L, source.getLong("condition-reminder-interval-seconds", 2L) * TICKS_PER_SECOND);
     }
 
     public Object conditionDefinition() {

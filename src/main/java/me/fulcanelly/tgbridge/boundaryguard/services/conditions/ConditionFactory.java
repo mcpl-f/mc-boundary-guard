@@ -5,7 +5,9 @@ import java.util.List;
 import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
+import me.fulcanelly.tgbridge.boundaryguard.domain.BoundaryArea;
 import me.fulcanelly.tgbridge.boundaryguard.integrations.tgbridge.TelegramLinkStatusService;
+import me.fulcanelly.tgbridge.boundaryguard.services.conditions.checks.InSpawnRadiusCondition;
 import me.fulcanelly.tgbridge.boundaryguard.services.conditions.checks.MinimumPlaytimeCondition;
 import me.fulcanelly.tgbridge.boundaryguard.services.conditions.checks.TelegramLinkedCondition;
 
@@ -22,6 +24,7 @@ public final class ConditionFactory {
 
     private static final String TELEGRAM_LINK_CHECK = "tg-linking-check";
     private static final String PLAYTIME_LIMIT = "time-played-limit";
+    private static final String IN_SPAWN_RADIUS = "in-spawn-radius";
 
     private final TelegramLinkStatusService telegramLinkStatus;
 
@@ -79,6 +82,7 @@ public final class ConditionFactory {
         return switch (name) {
             case TELEGRAM_LINK_CHECK -> new TelegramLinkedCondition(telegramLinkStatus);
             case PLAYTIME_LIMIT -> new MinimumPlaytimeCondition(readHours(parameters));
+            case IN_SPAWN_RADIUS -> new InSpawnRadiusCondition(new BoundaryArea(readRadius(parameters)));
             default -> throw new IllegalArgumentException("Unknown condition: " + name);
         };
     }
@@ -94,5 +98,12 @@ public final class ConditionFactory {
         }
 
         return hours.doubleValue();
+    }
+
+    private double readRadius(Object parameters) {
+        if (!(parameters instanceof Number radius)) {
+            throw new IllegalArgumentException(IN_SPAWN_RADIUS + " requires a numeric radius");
+        }
+        return radius.doubleValue();
     }
 }

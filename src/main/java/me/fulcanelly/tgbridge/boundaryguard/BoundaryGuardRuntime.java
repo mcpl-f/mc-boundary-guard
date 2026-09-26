@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.bukkit.scheduler.BukkitTask;
 
 /**
- * Owns the periodic refresh task started during startup.
+ * Owns the periodic tasks started during startup.
  *
  * There is no other startup-created state to restore on shutdown: restriction
  * strategies keep no per-player state (see {@link
@@ -23,8 +23,10 @@ import org.bukkit.scheduler.BukkitTask;
 public final class BoundaryGuardRuntime {
 
     private final BukkitTask refreshTask;
+    private final BukkitTask conditionReminderTask;
 
     public void stop() {
         refreshTask.cancel();
+        conditionReminderTask.cancel();
     }
 }

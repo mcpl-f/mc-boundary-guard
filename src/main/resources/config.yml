@@ -6,6 +6,12 @@ default-locale: ru
 
 # Rules decide when restrictions are lifted.
 # `all` requires every listed condition; `any` requires at least one.
+# `in-spawn-radius` is met while the player is within that distance of the
+# anchor - normal worlds use world spawn, Nether divides this value by 8, and
+# The End uses this value from real 0,0 (see domain/BoundaryArea). It's the
+# single source of truth for "the spawn area": `keep-on-spawn` (below) confines
+# movement to this same area rather than taking its own separate radius.
+#
 # Example: require both Telegram linking and 2.5 hours played:
 # condition:
 #   all:
@@ -28,24 +34,20 @@ default-locale: ru
 #         - ds-linking-check: true # not implemented yet, just for example
 #
 rules:
+  # Unrestricted once linked, OR simply while standing inside the spawn area -
+  # no need to link Telegram just to putter around at spawn.
   condition:
-    all:
+    any:
       - tg-linking-check: true
+      - in-spawn-radius: 2048
 
   strategies:
-    # Distance from the anchor where unbound players are allowed to move.
-    # Normal worlds use world spawn, Nether uses this value divided by 8,
-    # and The End uses this value from 0,0.
-    keep-on-spawn:
-      radius: 2048.0
+    # Plain on/off toggles: the area they act on is always the same
+    # in-spawn-radius above, so there is nothing left to configure per-strategy.
+    # keep-on-spawn: true
 
-    # Uncomment the block to enable Adventure Mode while restricted.
-    # Set everywhere to true to apply in every world; false will switch to
-    # adventure only once the player is outside of the specified radius
-    # (same Nether/End scaling as keep-on-spawn's radius above).
-    # switch-2-adventure-mode:
-    #   everywhere: false
-    #   only-outside-of-radius: 512.0
+    # Uncomment to also (or instead) switch restricted players to Adventure Mode.
+    switch-2-adventure-mode: true
 
     # Uncomment to prevent restricted players from using containers.
     # forbid-container-use: true
@@ -56,6 +58,10 @@ restriction-refresh-interval-ticks: 60
 # How long (in milliseconds) a "not yet linked" Telegram lookup is cached before
 # re-checking tg-bridge for that player.
 telegram-recheck-cooldown-millis: 300
+
+# How often (in seconds) a restricted player still gets reminded what they need
+# to satisfy, even if they're standing still and not triggering anything else.
+condition-reminder-interval-seconds: 2
 
 messages:
   en:

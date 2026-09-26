@@ -1,20 +1,19 @@
 package me.fulcanelly.tgbridge.boundaryguard.services.restrictions.strategies;
 
-import lombok.RequiredArgsConstructor;
-import me.fulcanelly.tgbridge.boundaryguard.domain.BoundaryArea;
 import me.fulcanelly.tgbridge.boundaryguard.services.restrictions.Restriction;
 
 import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 
 /**
- * Forces Adventure Mode on a restricted player once they leave the boundary area
- * (or, with {@code everywhere}, regardless of location).
+ * Forces Adventure Mode on a restricted player.
  *
- * The area is left alone so a restricted player keeps full survival privileges
- * near spawn (matching this plugin's "build/break/test at spawn" purpose); Adventure
- * Mode only kicks in once they wander past it, so the wider world stays protected
- * even without a hard movement block.
+ * Purely reactive to the {@code restricted} flag it's handed - it has no location
+ * logic of its own. Whether "restricted" already accounts for location (e.g. an
+ * {@code in-spawn-radius} condition) is {@code rules.condition}'s call, not this
+ * strategy's; it used to duplicate that check locally (its own boundary area plus
+ * an {@code everywhere} flag), which meant the same spatial concept was configured
+ * in two places that could drift out of sync.
  *
  * Restoring uses the server's configured default game mode rather than a saved
  * per-player snapshot. A snapshot lives only in memory, so a server restart would
@@ -22,17 +21,11 @@ import org.bukkit.entity.Player;
  * restore a mode it no longer remembers. This intentionally does not preserve an
  * individual player's own non-default mode.
  */
-@RequiredArgsConstructor
 public final class AdventureModeRestriction implements Restriction {
-
-    private final BoundaryArea boundaryArea;
-    private final boolean everywhere;
 
     @Override
     public void refresh(Player player, boolean restricted) {
-        boolean shouldApply = restricted && (everywhere || !boundaryArea.contains(player.getLocation()));
-
-        if (!shouldApply) {
+        if (!restricted) {
             restore(player);
             return;
         }

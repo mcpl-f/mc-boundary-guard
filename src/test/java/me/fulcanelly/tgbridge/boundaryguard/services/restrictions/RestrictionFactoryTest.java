@@ -26,12 +26,12 @@ class RestrictionFactoryTest {
     void combinesKeepOnSpawnAndAdventureModeWhenBothAreEnabled() {
         BoundaryGuardConfig config = configFrom("""
                 rules:
+                  condition:
+                    any:
+                      - in-spawn-radius: 200
                   strategies:
-                    keep-on-spawn:
-                      radius: 200
-                    switch-2-adventure-mode:
-                      everywhere: false
-                      only-outside-of-radius: 50
+                    keep-on-spawn: true
+                    switch-2-adventure-mode: true
                 """);
 
         RestrictionFactory.Setup setup = new RestrictionFactory(config).create();

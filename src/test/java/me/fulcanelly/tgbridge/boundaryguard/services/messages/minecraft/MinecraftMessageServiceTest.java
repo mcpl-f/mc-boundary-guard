@@ -6,6 +6,8 @@ import java.util.UUID;
 import me.fulcanelly.tgbridge.boundaryguard.config.BoundaryGuardConfig;
 import me.fulcanelly.tgbridge.boundaryguard.services.conditions.ConditionReason;
 
+import net.md_5.bungee.api.ChatColor;
+
 import org.bukkit.entity.Player;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -38,7 +40,7 @@ class MinecraftMessageServiceTest {
         messages.sendContainerBlocked(player);
         messages.sendContainerBlocked(player);
 
-        verify(player, times(1)).sendMessage("blocked");
+        verify(player, times(1)).sendMessage(ChatColor.RED + "blocked");
     }
 
     @Test
@@ -54,7 +56,7 @@ class MinecraftMessageServiceTest {
         messages.forget(player);
         messages.sendContainerBlocked(player);
 
-        verify(player, times(2)).sendMessage("blocked");
+        verify(player, times(2)).sendMessage(ChatColor.RED + "blocked");
     }
 
     @Test
@@ -69,7 +71,7 @@ class MinecraftMessageServiceTest {
 
         messages.sendConditionReminder(player, List.of(ConditionReason.TELEGRAM_LINKING, ConditionReason.PLAYTIME));
 
-        verify(player).sendMessage("link telegram\nplay longer");
+        verify(player).sendMessage(ChatColor.RED + "link telegram\nplay longer");
     }
 
     @Test
