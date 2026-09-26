@@ -3,6 +3,7 @@ package me.fulcanelly.tgbridge.boundaryguard.services.restrictions;
 import java.util.List;
 
 import me.fulcanelly.tgbridge.boundaryguard.services.conditions.Condition;
+import me.fulcanelly.tgbridge.boundaryguard.services.conditions.ConditionReason;
 
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.Location;
@@ -50,6 +51,11 @@ public final class RestrictionService {
 
     public boolean blocksContainerUse(Player player, InventoryType inventoryType) {
         return isContainer(inventoryType) && !allowsContainerUse(player);
+    }
+
+    /** What this player still needs to satisfy, for a player-facing reminder message. */
+    public List<ConditionReason> unmetReasons(Player player) {
+        return accessCondition.unmetReasons(player);
     }
 
     // InventoryType has no built-in "is a container" predicate, so the block-like

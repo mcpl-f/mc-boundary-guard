@@ -1,6 +1,9 @@
 package me.fulcanelly.tgbridge.boundaryguard.services.conditions.checks;
 
+import java.util.Optional;
+
 import me.fulcanelly.tgbridge.boundaryguard.services.conditions.Condition;
+import me.fulcanelly.tgbridge.boundaryguard.services.conditions.ConditionReason;
 
 import org.bukkit.Statistic;
 import org.bukkit.entity.Player;
@@ -21,5 +24,10 @@ public final class MinimumPlaytimeCondition implements Condition {
     @Override
     public boolean isMet(Player player) {
         return player.getStatistic(Statistic.PLAY_ONE_MINUTE) >= minimumTicks;
+    }
+
+    @Override
+    public Optional<ConditionReason> reason() {
+        return Optional.of(ConditionReason.PLAYTIME);
     }
 }

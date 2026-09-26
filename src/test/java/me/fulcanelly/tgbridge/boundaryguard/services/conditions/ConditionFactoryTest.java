@@ -12,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
@@ -71,5 +72,51 @@ class ConditionFactoryTest {
         // Playtime clears the outer "all"; the inner "any" is satisfied by its
         // always-met 0h leaf, independent of the (unmet) Telegram check.
         assertTrue(factory.fromConfig(tree).isMet(player));
+    }
+
+    @Test
+    void allReportsEveryUnmetChildAsAReasonToShowThePlayer() {
+        ConditionFactory factory = new ConditionFactory(telegramLinkStatus);
+
+        Object tree = Map.of("all", List.of(
+                "tg-linking-check",
+                Map.of("time-played-limit", Map.of("hours", 10.0))));
+
+        when(telegramLinkStatus.isLinked(player)).thenReturn(false);
+        when(player.getStatistic(Statistic.PLAY_ONE_MINUTE)).thenReturn(0);
+
+        assertEquals(
+                List.of(ConditionReason.TELEGRAM_LINKING, ConditionReason.PLAYTIME),
+                factory.fromConfig(tree).unmetReasons(player));
+    }
+
+    @Test
+    void anyReportsNoReasonsOnceOneChildIsAlreadyMet() {
+        ConditionFactory factory = new ConditionFactory(telegramLinkStatus);
+
+        Object tree = Map.of("any", List.of(
+                "tg-linking-check",
+                Map.of("time-played-limit", Map.of("hours", 10.0))));
+
+        when(telegramLinkStatus.isLinked(player)).thenReturn(true);
+
+        assertEquals(List.of(), factory.fromConfig(tree).unmetReasons(player));
+        // Nothing left to fix, so the (unmet) playtime child is never consulted.
+    }
+
+    @Test
+    void anyReportsEveryChildAsAnAlternativeWhenNoneAreMet() {
+        ConditionFactory factory = new ConditionFactory(telegramLinkStatus);
+
+        Object tree = Map.of("any", List.of(
+                "tg-linking-check",
+                Map.of("time-played-limit", Map.of("hours", 10.0))));
+
+        when(telegramLinkStatus.isLinked(player)).thenReturn(false);
+        when(player.getStatistic(Statistic.PLAY_ONE_MINUTE)).thenReturn(0);
+
+        assertEquals(
+                List.of(ConditionReason.TELEGRAM_LINKING, ConditionReason.PLAYTIME),
+                factory.fromConfig(tree).unmetReasons(player));
     }
 }

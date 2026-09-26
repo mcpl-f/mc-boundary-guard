@@ -1,10 +1,13 @@
 package me.fulcanelly.tgbridge.boundaryguard.services.messages.minecraft;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import me.fulcanelly.tgbridge.boundaryguard.config.BoundaryGuardConfig;
+import me.fulcanelly.tgbridge.boundaryguard.services.conditions.ConditionReason;
 
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.ClickEvent;
@@ -46,6 +49,34 @@ public final class MinecraftMessageService {
         if (tryWarn(player)) {
             player.spigot().sendMessage(buildBoundaryBlockedMessage(player));
         }
+    }
+
+    /**
+     * Reminds a restricted player what they still need to satisfy - e.g. right
+     * after they're switched to Adventure Mode, or when they try to interact with
+     * the world while in it. {@code reasons} come from
+     * {@code RestrictionService#unmetReasons}; a blank list sends nothing.
+     */
+    public void sendConditionReminder(Player player, List<ConditionReason> reasons) {
+        if (reasons.isEmpty() || !tryWarn(player)) {
+            return;
+        }
+
+        String combined = reasons.stream()
+                .distinct()
+                .map(reason -> get(player, messageKeyFor(reason)))
+                .collect(Collectors.joining("\n"));
+        player.sendMessage(combined);
+    }
+
+    // The only place that needs to know a ConditionReason maps to a messages.*
+    // key - the conditions layer itself stays unaware config.yml even has a
+    // messages section.
+    private String messageKeyFor(ConditionReason reason) {
+        return switch (reason) {
+            case TELEGRAM_LINKING -> "condition-tg-linking";
+            case PLAYTIME -> "condition-playtime";
+        };
     }
 
     public void forget(Player player) {

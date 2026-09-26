@@ -68,6 +68,8 @@ messages:
     teleported: "Teleported to the allowed spawn area."
     already-in-area: "You are already inside the allowed spawn area."
     only-player: "Only players can use this command."
+    condition-tg-linking: "Link your Telegram account to interact with the world freely."
+    condition-playtime: "Play longer on the server to interact with the world freely."
   ru:
     blocked: "Привяжи Minecraft аккаунт к Telegram перед выходом со спавна."
     container-blocked: "Привяжи Telegram, чтобы пользоваться контейнерами."
@@ -78,3 +80,5 @@ messages:
     teleported: "Телепортирован в разрешенную зону спавна."
     already-in-area: "Ты уже находишься в разрешенной зоне спавна."
     only-player: "Эту команду может использовать только игрок."
+    condition-tg-linking: "Привяжи Telegram аккаунт, чтобы свободно взаимодействовать с миром."
+    condition-playtime: "Играй дольше на сервере, чтобы свободно взаимодействовать с миром."
