@@ -246,8 +246,6 @@ Until both conditions are satisfied, the configured restriction strategies conti
 
 ## Configuration
 
-## Configuration
-
 Additional settings live in `config.yml`:
 
 | Setting | Description |
