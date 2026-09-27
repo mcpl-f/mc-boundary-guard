@@ -37,7 +37,11 @@
         <dependency>
             <groupId>com.discordsrv</groupId>
             <artifactId>discordsrv</artifactId>
-            <version>1.26.2</version>
+            <!-- 1.27.0 turned AccountLinkManager from an abstract class into an
+                 interface - compiling against an older version produces
+                 invokevirtual bytecode that throws IncompatibleClassChangeError
+                 against any server actually running 1.27.0+. -->
+            <version>1.28.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

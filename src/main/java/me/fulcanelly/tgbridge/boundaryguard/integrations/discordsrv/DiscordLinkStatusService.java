@@ -2,6 +2,8 @@ package me.fulcanelly.tgbridge.boundaryguard.integrations.discordsrv;
 
 import github.scarsz.discordsrv.DiscordSRV;
 
+import lombok.RequiredArgsConstructor;
+
 import org.bukkit.entity.Player;
 
 /**
@@ -12,13 +14,10 @@ import org.bukkit.entity.Player;
  * call is already a plain in-JVM map lookup, not a network/database
  * round trip.
  */
+@RequiredArgsConstructor
 public final class DiscordLinkStatusService {
 
     private final DiscordSRV discordSrv;
-
-    public DiscordLinkStatusService(DiscordSRV discordSrv) {
-        this.discordSrv = discordSrv;
-    }
 
     public boolean isLinked(Player player) {
         return discordSrv.getAccountLinkManager().getDiscordId(player.getUniqueId()) != null;

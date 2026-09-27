@@ -6,7 +6,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
+import me.fulcanelly.tgbridge.boundaryguard.integrations.discordsrv.DiscordLinkStatusService;
 import me.fulcanelly.tgbridge.boundaryguard.integrations.tgbridge.TelegramLinkStatusService;
 import me.fulcanelly.tgbridge.boundaryguard.services.conditions.Condition;
 import me.fulcanelly.tgbridge.boundaryguard.services.conditions.ConditionFactory;
@@ -45,6 +47,8 @@ class ShippedConfigTest {
 
     @Mock
     private TelegramLinkStatusService telegramLinkStatus;
+    @Mock
+    private DiscordLinkStatusService discordLinkStatus;
     @Mock
     private Player player;
 
@@ -98,16 +102,18 @@ class ShippedConfigTest {
     }
 
     @Test
-    void defaultConditionRequiresTelegramLinkingUnlessAlreadyInsideTheSpawnArea() {
+    void defaultConditionRequiresTelegramOrDiscordLinkingUnlessAlreadyInsideTheSpawnArea() {
         BoundaryGuardConfig config = loadShippedConfig();
 
-        Condition condition = new ConditionFactory(telegramLinkStatus).fromConfig(config.conditionDefinition());
+        Condition condition = new ConditionFactory(telegramLinkStatus, Optional.of(discordLinkStatus))
+                .fromConfig(config.conditionDefinition());
 
         World world = mock(World.class);
         when(world.getEnvironment()).thenReturn(World.Environment.NORMAL);
         when(world.getSpawnLocation()).thenReturn(new Location(world, 0, 64, 0));
 
         when(telegramLinkStatus.isLinked(player)).thenReturn(false);
+        when(discordLinkStatus.isLinked(player)).thenReturn(false);
         when(player.getLocation()).thenReturn(new Location(world, 5000, 64, 0)); // outside 2048
         assertFalse(condition.isMet(player));
 
@@ -138,6 +144,7 @@ class ShippedConfigTest {
                 "reasons.tg-linking.label", "reasons.tg-linking.command", "reasons.tg-linking.hover",
                 "reasons.playtime.label",
                 "reasons.return-to-spawn.label", "reasons.return-to-spawn.command", "reasons.return-to-spawn.hover",
+                "reasons.ds-linking.label", "reasons.ds-linking.command", "reasons.ds-linking.hover",
                 "restrictions.leave-spawn.gerund", "restrictions.leave-spawn.infinitive",
                 "restrictions.use-containers.gerund", "restrictions.use-containers.infinitive",
                 "restrictions.interact-freely.gerund", "restrictions.interact-freely.infinitive",
