@@ -89,7 +89,12 @@ public final class BoundaryGuardConfig {
 
     /** How often, in ticks, an idle restricted player is reminded what they still need to satisfy. */
     public long conditionReminderIntervalTicks() {
-        return Math.max(1L, source.getLong("condition-reminder-interval-seconds", 2L) * TICKS_PER_SECOND);
+        return Math.max(1L, source.getLong("condition-reminder.interval-seconds", 2L) * TICKS_PER_SECOND);
+    }
+
+    /** Whether the idle-player reminder job should be scheduled at all. */
+    public boolean conditionReminderEnabled() {
+        return source.getBoolean("condition-reminder.enabled", true);
     }
 
     public Object conditionDefinition() {

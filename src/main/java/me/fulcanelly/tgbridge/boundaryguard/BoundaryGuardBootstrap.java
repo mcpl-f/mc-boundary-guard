@@ -1,5 +1,7 @@
 package me.fulcanelly.tgbridge.boundaryguard;
 
+import java.util.Optional;
+
 import me.fulcanelly.tgbridge.Bridge;
 import me.fulcanelly.tgbridge.tools.twofactor.register.SignupLoginReception;
 import lombok.RequiredArgsConstructor;
@@ -52,8 +54,9 @@ public final class BoundaryGuardBootstrap {
         registerListeners(restrictions, telegramLinkStatus, messages);
         registerCommand(restrictionSetup.spawnArea(), messages);
         BukkitTask refreshTask = scheduleRefresh(restrictions, refreshPeriodTicks);
-        BukkitTask conditionReminderTask = scheduleConditionReminder(
-                restrictions, messages, config.conditionReminderIntervalTicks());
+        Optional<BukkitTask> conditionReminderTask = config.conditionReminderEnabled()
+                ? Optional.of(scheduleConditionReminder(restrictions, messages, config.conditionReminderIntervalTicks()))
+                : Optional.empty();
 
         return new BoundaryGuardRuntime(refreshTask, conditionReminderTask);
     }

@@ -76,11 +76,6 @@ class MinecraftMessageServiceTest {
         when(config.message("en", "join.so-that")).thenReturn("so that you can");
     }
 
-    private void stubSpawnEscapeHatch() {
-        when(config.message("en", "spawn-button")).thenReturn("[Teleport to spawn - /tgspawn]");
-        when(config.message("en", "spawn-hover")).thenReturn("Run /tgspawn");
-    }
-
     private void stubReturnToSpawnReason() {
         when(config.message("en", "reasons.return-to-spawn.label")).thenReturn("[Return to spawn - /tgspawn]");
         when(config.hasMessage("en", "reasons.return-to-spawn.command")).thenReturn(true);
@@ -236,35 +231,31 @@ class MinecraftMessageServiceTest {
     }
 
     @Test
-    void boundaryBlockedUsesTheLeaveSpawnRestrictionAndAppendsTheSpawnEscapeHatch() {
+    void boundaryBlockedUsesTheLeaveSpawnRestrictionAndAppendsTheReturnToSpawnAction() {
         when(config.defaultLocale()).thenReturn("en");
         stubPlayer();
         stubPlaytimeReason();
         stubBeforeJoin();
         when(config.message("en", "restrictions.leave-spawn.gerund")).thenReturn("leaving the spawn area");
-        stubSpawnEscapeHatch();
+        stubReturnToSpawnReason();
 
         MinecraftMessageService messages = new MinecraftMessageService(config, 10_000L);
         messages.sendBoundaryBlocked(player, Optional.of(new ReasonExpr.Leaf(ConditionReason.PLAYTIME)));
 
         assertEquals(
-                "play longer before leaving the spawn area [Teleport to spawn - /tgspawn]",
+                "play longer before leaving the spawn area [Return to spawn - /tgspawn]",
                 plainText(sentComponent()));
     }
 
-    // /tgspawn is not a reason competing with e.g. Telegram linking in the
-    // composed sentence - walking/teleporting back doesn't satisfy
-    // rules.condition the way linking does, it just gets a player out of the
-    // restricted area. So it's always appended as its own separate, clickable
-    // action, regardless of which reason(s) triggered the block.
+    // Boundary escape action reuses reasons.return-to-spawn metadata.
     @Test
-    void boundaryBlockedAlwaysAppendsAClickableTgspawnEscapeHatch() {
+    void boundaryBlockedAppendsClickableReturnToSpawnAction() {
         when(config.defaultLocale()).thenReturn("en");
         stubPlayer();
         stubPlaytimeReason();
         stubBeforeJoin();
         when(config.message("en", "restrictions.leave-spawn.gerund")).thenReturn("leaving the spawn area");
-        stubSpawnEscapeHatch();
+        stubReturnToSpawnReason();
 
         MinecraftMessageService messages = new MinecraftMessageService(config, 10_000L);
         messages.sendBoundaryBlocked(player, Optional.of(new ReasonExpr.Leaf(ConditionReason.PLAYTIME)));
@@ -298,21 +289,23 @@ class MinecraftMessageServiceTest {
         assertEquals(ChatColor.BLUE, root.getExtra().get(0).getColor());
     }
 
-    // The exact bug this guards against: RETURN_TO_SPAWN must never be offered
-    // as the fix for the leave-spawn restriction itself ("return to spawn,
-    // before leaving the spawn area" is circular), even when it's genuinely
-    // part of the unmet reason alongside something else. Collapses the
-    // now-single-child group down to just the remaining reason, same as if
-    // RETURN_TO_SPAWN had never been unmet at all.
+    // sendBoundaryBlocked no longer tries to detect or drop RETURN_TO_SPAWN
+    // from the reason clause - it's rare for it to show up there at all
+    // (BoundaryMoveListener computes the reason from the player's current
+    // position, which normally still satisfies in-spawn-radius the instant
+    // a move gets blocked), and when it does, this is the accepted tradeoff:
+    // it's mentioned twice rather than the service carrying tree-filtering
+    // logic for a narrow edge case.
     @Test
-    void boundaryBlockedNeverMentionsReturnToSpawnEvenWhenItsPartOfTheUnmetReason() {
+    void boundaryBlockedMayMentionReturnToSpawnTwiceWhenItsAlsoAnUnmetReason() {
         when(config.defaultLocale()).thenReturn("en");
         stubPlayer();
         when(config.message("en", "reasons.tg-linking.label")).thenReturn("[Bind Telegram - /tg account register]");
         when(config.hasMessage("en", "reasons.tg-linking.command")).thenReturn(false);
+        when(config.message("en", "join.or")).thenReturn("or");
         stubBeforeJoin();
         when(config.message("en", "restrictions.leave-spawn.gerund")).thenReturn("leaving the spawn area");
-        stubSpawnEscapeHatch();
+        stubReturnToSpawnReason();
 
         ReasonExpr reason = new ReasonExpr.Group(ConditionApplier.Operator.ANY, List.of(
                 new ReasonExpr.Leaf(ConditionReason.TELEGRAM_LINKING),
@@ -322,27 +315,23 @@ class MinecraftMessageServiceTest {
         messages.sendBoundaryBlocked(player, Optional.of(reason));
 
         assertEquals(
-                "[Bind Telegram - /tg account register] before leaving the spawn area [Teleport to spawn - /tgspawn]",
+                "[Bind Telegram - /tg account register] or [Return to spawn - /tgspawn] before leaving the spawn area"
+                        + " [Return to spawn - /tgspawn]",
                 plainText(sentComponent()));
     }
 
-    // If in-spawn-radius were configured as the *only* rules.condition branch,
-    // dropping RETURN_TO_SPAWN would leave nothing to say - falls back to
-    // showing it anyway rather than silently sending no reason at all.
     @Test
-    void boundaryBlockedFallsBackToReturnToSpawnWhenItsTheOnlyUnmetReason() {
+    void boundaryBlockedAlwaysAppendsReturnToSpawnEvenWhenItsTheOnlyUnmetReason() {
         when(config.defaultLocale()).thenReturn("en");
         stubPlayer();
         stubReturnToSpawnReason();
         stubBeforeJoin();
         when(config.message("en", "restrictions.leave-spawn.gerund")).thenReturn("leaving the spawn area");
-        stubSpawnEscapeHatch();
-
         MinecraftMessageService messages = new MinecraftMessageService(config, 10_000L);
         messages.sendBoundaryBlocked(player, Optional.of(new ReasonExpr.Leaf(ConditionReason.RETURN_TO_SPAWN)));
 
         assertEquals(
-                "[Return to spawn - /tgspawn] before leaving the spawn area [Teleport to spawn - /tgspawn]",
+                "[Return to spawn - /tgspawn] before leaving the spawn area [Return to spawn - /tgspawn]",
                 plainText(sentComponent()));
     }
 
@@ -390,6 +379,7 @@ class MinecraftMessageServiceTest {
 
     @Test
     void sendsNothingWhenReasonIsEmpty() {
+        when(config.defaultLocale()).thenReturn("en");
         MinecraftMessageService messages = new MinecraftMessageService(config, 10_000L);
 
         messages.sendContainerBlocked(player, Optional.empty());
@@ -401,6 +391,7 @@ class MinecraftMessageServiceTest {
 
     @Test
     void conditionReminderSendsNothingWhenEffectsListIsEmptyEvenWithAReason() {
+        when(config.defaultLocale()).thenReturn("en");
         MinecraftMessageService messages = new MinecraftMessageService(config, 10_000L);
 
         messages.sendConditionReminder(

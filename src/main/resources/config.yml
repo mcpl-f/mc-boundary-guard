@@ -61,8 +61,12 @@ telegram-recheck-cooldown-millis: 300
 
 # How often (in seconds) a restricted player still gets reminded what they need
 # to satisfy, even if they're standing still and not triggering anything else.
-condition-reminder-interval-seconds: 2
+# Set enabled to false to turn this reminder off entirely.
+condition-reminder:
+  interval-seconds: 4
+  enabled: true
 
+  
 messages:
   en:
     # Connector words used to assemble a warning from the pieces below at send
@@ -116,12 +120,6 @@ messages:
         gerund: "interacting with the world freely"
         infinitive: "interact with the world freely"
 
-    # The /tgspawn escape hatch, always appended after a boundary-blocked
-    # message - separate from `reasons` above, since walking/teleporting back
-    # isn't a way to satisfy rules.condition the way linking Telegram is, just
-    # an always-available way out for someone not ready to verify yet.
-    spawn-button: "[Teleport to spawn - /tgspawn]"
-    spawn-hover: "Run /tgspawn"
 
     # Replies from the /tgspawn command.
     tgspawn-command:
@@ -129,7 +127,7 @@ messages:
       already-in-area: "You are already inside the allowed spawn area."
       only-player: "Only players can use this command."
 
-      
+
   ru:
     join:
       and: "и"
@@ -160,8 +158,6 @@ messages:
         gerund: "свободно взаимодействовать с миром"
         infinitive: "свободно взаимодействовать с миром"
 
-    spawn-button: "[Телепорт на спавн - /tgspawn]"
-    spawn-hover: "Выполнить /tgspawn"
 
     tgspawn-command:
       teleported: "Телепортирован в разрешенную зону спавна."

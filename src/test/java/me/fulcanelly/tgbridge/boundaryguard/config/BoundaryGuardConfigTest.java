@@ -101,16 +101,39 @@ class BoundaryGuardConfigTest {
 
     @Test
     void conditionReminderIntervalConvertsSecondsToTicks() {
-        BoundaryGuardConfig config = configFrom("condition-reminder-interval-seconds: 3\n");
+        BoundaryGuardConfig config = configFrom("""
+                condition-reminder:
+                  interval-seconds: 3
+                """);
 
         assertEquals(60L, config.conditionReminderIntervalTicks());
     }
 
     @Test
     void conditionReminderIntervalIsClampedToAtLeastOneTick() {
-        BoundaryGuardConfig config = configFrom("condition-reminder-interval-seconds: 0\n");
+        BoundaryGuardConfig config = configFrom("""
+                condition-reminder:
+                  interval-seconds: 0
+                """);
 
         assertEquals(1L, config.conditionReminderIntervalTicks());
+    }
+
+    @Test
+    void conditionReminderIsEnabledByDefault() {
+        BoundaryGuardConfig config = configFrom("");
+
+        assertTrue(config.conditionReminderEnabled());
+    }
+
+    @Test
+    void conditionReminderCanBeDisabled() {
+        BoundaryGuardConfig config = configFrom("""
+                condition-reminder:
+                  enabled: false
+                """);
+
+        assertFalse(config.conditionReminderEnabled());
     }
 
     @Test

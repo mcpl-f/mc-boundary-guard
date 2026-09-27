@@ -108,7 +108,8 @@ class ShippedConfigTest {
 
         assertEquals(60L, config.restrictionRefreshIntervalTicks());
         assertEquals(300L, config.telegramRecheckCooldownMillis());
-        assertEquals(40L, config.conditionReminderIntervalTicks());
+        assertEquals(80L, config.conditionReminderIntervalTicks());
+        assertTrue(config.conditionReminderEnabled());
     }
 
     @Test
@@ -124,7 +125,6 @@ class ShippedConfigTest {
                 "restrictions.leave-spawn.gerund", "restrictions.leave-spawn.infinitive",
                 "restrictions.use-containers.gerund", "restrictions.use-containers.infinitive",
                 "restrictions.interact-freely.gerund", "restrictions.interact-freely.infinitive",
-                "spawn-button", "spawn-hover",
                 "tgspawn-command.teleported", "tgspawn-command.already-in-area", "tgspawn-command.only-player")) {
             assertNotEquals(key, config.message("en", key), "missing en." + key);
             assertNotEquals(key, config.message("ru", key), "missing ru." + key);

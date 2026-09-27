@@ -47,19 +47,22 @@ import org.bukkit.entity.Player;
  * uniform across locales even though only one locale actually needs two forms.
  *
  * Every part of the message gets its color from an explicit
- * {@link TextComponent#setColor}, never by embedding a {@link ChatColor}'s
- * legacy code into the text itself. The two look interchangeable in a test
- * that only ever reads the message back through {@code toLegacyText()} (which
- * resolves each node's *effective* color - inherited from its parent when the
- * node has none of its own - the same way whether that color came from
- * {@code setColor} or from a legacy code that happened to be the first thing
- * in the root's own text), but the plugin sends a JSON component tree, not a
- * legacy string: a client renders each node's own resolved color, and a raw
+ * {@link TextComponent#setColor} ({@link #coloredText}, or directly on a
+ * component built elsewhere), never by embedding a {@link ChatColor}'s legacy
+ * code into the text itself. The two look interchangeable in a test that only
+ * ever reads the message back through {@code toLegacyText()} (which resolves
+ * each node's *effective* color - inherited from its parent when the node has
+ * none of its own - the same way whether that color came from {@code
+ * setColor} or from a legacy code that happened to be the first thing in the
+ * root's own text), but the plugin sends a JSON component tree, not a legacy
+ * string: a client renders each node's own resolved color, and a raw
  * {@code §c} sitting inside one node's {@code text} does nothing for any
- * other node. A part that's meant to inherit red (the restriction phrase, a
- * plain-advice reason like playtime) needs the root's color to actually be
- * set structurally, or it renders in the client's default white - which is
- * exactly what was happening before this was written the explicit way.
+ * other node. Red is the root's color (a plain-advice reason like playtime
+ * genuinely inherits it, having no color of its own); a clickable reason is
+ * blue and a join word/restriction phrase is yellow, both set explicitly
+ * rather than relied on to inherit - either way, something that's never
+ * given a real structural color renders in the client's default white, which
+ * is exactly what was happening before this was written the explicit way.
  */
 public final class MinecraftMessageService {
 
@@ -74,22 +77,15 @@ public final class MinecraftMessageService {
         this.defaultLocale = normalizeLocale(config.defaultLocale());
     }
 
-    public String get(Player player, String key) {
-        return config.message(playerLocale(player), key);
-    }
-
-    public String getDefault(String key) {
-        return config.message(defaultLocale, key);
-    }
 
     /**
-     * Sent when a movement attempt outside the area is blocked. Always appends
-     * a {@code /tgspawn} escape hatch after the reason/restriction sentence -
-     * unlike a {@code reasons.*} entry, this isn't a way to satisfy
-     * {@code rules.condition} (walking back to spawn doesn't durably fix
-     * anything the way linking Telegram does; the moment you try to leave
-     * again you're blocked the same way), it's a separate, always-available
-     * option for a player not ready to deal with verification right now.
+     * Sent when a movement attempt outside the area is blocked. This always
+     * describes the {@code leave-spawn} restriction, and that's the one
+     * restriction {@code reasons.return-to-spawn} can't be offered as a fix
+     * for, so it's always appended afterward instead, as its own separate
+     * action - regardless of whether it also happens to be part of
+     * {@code reason} (rare: only when the player was already outside the area
+     * when this got triggered).
      */
     public void sendBoundaryBlocked(Player player, Optional<ReasonExpr> reason) {
         if (reason.isEmpty() || !tryWarn(player)) {
@@ -98,12 +94,8 @@ public final class MinecraftMessageService {
 
         TextComponent message = reasonMessage(
                 player, reason.get(), "join.before", "gerund", List.of(RestrictionEffect.LEAVE_SPAWN));
-
-        TextComponent spawn = new TextComponent(" " + get(player, "spawn-button"));
-        spawn.setColor(ChatColor.BLUE);
-        spawn.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/tgspawn"));
-        spawn.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text(get(player, "spawn-hover"))));
-        message.addExtra(spawn);
+        message.addExtra(" ");
+        message.addExtra(reasonComponent(player, ConditionReason.RETURN_TO_SPAWN));
 
         player.spigot().sendMessage(message);
     }
@@ -141,6 +133,7 @@ public final class MinecraftMessageService {
     }
 
     private boolean tryWarn(Player player) {
+
         long now = System.currentTimeMillis();
         long last = lastWarningAt.getOrDefault(player.getUniqueId(), 0L);
         if (now - last < warningCooldownMillis) {
@@ -160,50 +153,12 @@ public final class MinecraftMessageService {
     // there's nothing to keep reapplying as the tree is built up.
     private TextComponent reasonMessage(
             Player player, ReasonExpr reason, String joinKey, String restrictionForm, List<RestrictionEffect> effects) {
-        ReasonExpr shownReason = effects.contains(RestrictionEffect.LEAVE_SPAWN)
-                ? withoutReturnToSpawn(reason)
-                : reason;
-
         TextComponent message = new TextComponent("");
-        message.setColor(ChatColor.RED);
-        message.addExtra(reasonExprComponent(player, shownReason));
+        message.setColor(ChatColor.BLUE);
+        message.addExtra(reasonExprComponent(player, reason));
         message.addExtra(coloredText(" " + get(player, joinKey) + " ", ChatColor.YELLOW));
         message.addExtra(effectsComponent(player, effects, restrictionForm));
         return message;
-    }
-
-    // RETURN_TO_SPAWN (see InSpawnRadiusCondition) is a fine alternative to
-    // mention anywhere else, but naming it as the fix for the leave-spawn
-    // restriction itself is circular - "return to spawn, before leaving the
-    // spawn area" offers the one thing the player is currently failing to do
-    // as though it solved that same problem. Dropping it collapses a Group
-    // down to its other child, same as ConditionApplier would if that child
-    // had never been unmet in the first place; if it was the *only* unmet
-    // reason (an admin configured in-spawn-radius as the sole condition),
-    // there's nothing non-circular left to say, so this falls back to the
-    // original rather than showing nothing.
-    private ReasonExpr withoutReturnToSpawn(ReasonExpr reason) {
-        return dropReturnToSpawn(reason).orElse(reason);
-    }
-
-    private Optional<ReasonExpr> dropReturnToSpawn(ReasonExpr expr) {
-        if (expr instanceof ReasonExpr.Leaf leaf) {
-            return leaf.reason() == ConditionReason.RETURN_TO_SPAWN ? Optional.empty() : Optional.of(expr);
-        }
-
-        ReasonExpr.Group group = (ReasonExpr.Group) expr;
-        List<ReasonExpr> children = group.children().stream()
-                .map(this::dropReturnToSpawn)
-                .flatMap(Optional::stream)
-                .toList();
-
-        if (children.isEmpty()) {
-            return Optional.empty();
-        }
-        if (children.size() == 1) {
-            return Optional.of(children.get(0));
-        }
-        return Optional.of(new ReasonExpr.Group(group.operator(), children));
     }
 
     // Multiple effects (only ever passed by the idle-player job, which isn't
@@ -247,9 +202,14 @@ public final class MinecraftMessageService {
     // message's color.
     private TextComponent reasonComponent(Player player, ConditionReason reason) {
         String base = "reasons." + reasonKeyFor(reason);
-        boolean clickable = has(player, base + ".command");
+        // Whether a reason is actionable at all is decided once, from the
+        // default locale's config, not per player - so a translator who forgot
+        // to carry a command/hover into one locale doesn't make the same
+        // reason clickable for some players and plain text for others.
+        boolean clickable = has(base + ".command");
 
         TextComponent component = new TextComponent(get(player, base + ".label"));
+
         if (clickable) {
             component.setColor(ChatColor.BLUE);
             component.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, get(player, base + ".command")));
@@ -287,18 +247,27 @@ public final class MinecraftMessageService {
         return "restrictions." + name + "." + form;
     }
 
-    private boolean has(Player player, String key) {
-        return config.hasMessage(playerLocale(player), key);
+    private boolean has(String key) {
+        return config.hasMessage(defaultLocale, key);
+    }
+
+    public String get(Player player, String key) {
+        return config.message(playerLocale(player), key);
+    }
+
+    public String getDefault(String key) {
+        return config.message(defaultLocale, key);
     }
 
     private String playerLocale(Player player) {
-        return normalizeLocale(player.getLocale());
+        String locale = player.getLocale();
+        if (locale == null || locale.isEmpty()) {
+            return defaultLocale;
+        }
+        return normalizeLocale(locale);
     }
 
     private String normalizeLocale(String locale) {
-        if (locale == null || locale.isEmpty()) {
-            return "en";
-        }
         return locale.toLowerCase().split("[_-]", 2)[0];
     }
 }

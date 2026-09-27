@@ -454,10 +454,11 @@ other restrictions is covered too, not just the boundary-blocked message. If
 `in-spawn-radius` were the *only* unmet reason (an admin-configured
 `rules.condition` with no Telegram/playtime alternative at all), dropping it
 would leave nothing to say; that edge case falls back to showing it anyway
-rather than sending no reason at all. The always-appended `/tgspawn`
-escape-hatch button in `sendBoundaryBlocked` (`spawn-button`/`spawn-hover`) is
-unaffected by any of this - it's still built completely separately from the
-reason composition, per the first correction.
+rather than sending no reason at all. The always-appended `/tgspawn` escape
+action remains separate from the unmet-reason expression, but reuses
+`reasons.return-to-spawn` for its label, command, and hover instead of keeping
+duplicate `spawn-button`/`spawn-hover` keys. When it is the only unmet reason,
+the action appears once rather than as both reason and appended button.
 
 **Colors were being set by embedding a legacy `§`-code into a component's own
 text, which a real client never reinterprets, but `toLegacyText()` does -
