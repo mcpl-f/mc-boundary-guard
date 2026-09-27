@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import me.fulcanelly.tgbridge.boundaryguard.config.BoundaryGuardConfig;
 import me.fulcanelly.tgbridge.boundaryguard.config.ConfigValidator;
 import me.fulcanelly.tgbridge.boundaryguard.domain.BoundaryArea;
+import me.fulcanelly.tgbridge.boundaryguard.integrations.discordsrv.DiscordLinkStatusService;
 import me.fulcanelly.tgbridge.boundaryguard.integrations.tgbridge.TelegramLinkStatusService;
 import me.fulcanelly.tgbridge.boundaryguard.jobs.ConditionReminderJob;
 import me.fulcanelly.tgbridge.boundaryguard.jobs.RestrictionRefreshJob;
@@ -23,6 +24,8 @@ import me.fulcanelly.tgbridge.boundaryguard.services.conditions.Condition;
 import me.fulcanelly.tgbridge.boundaryguard.services.conditions.ConditionFactory;
 import me.fulcanelly.tgbridge.boundaryguard.services.restrictions.RestrictionFactory;
 import me.fulcanelly.tgbridge.boundaryguard.services.restrictions.RestrictionService;
+
+import github.scarsz.discordsrv.DiscordSRV;
 
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -51,7 +54,8 @@ public final class BoundaryGuardBootstrap {
 
     public BoundaryGuardRuntime start() {
         BoundaryGuardConfig config = new BoundaryGuardConfig(plugin.getConfig(), loadLocales());
-        new ConfigValidator(config).validate();
+        Optional<DiscordLinkStatusService> discordLinkStatus = findDiscordSrv().map(DiscordLinkStatusService::new);
+        new ConfigValidator(config, discordLinkStatus).validate();
 
         Bridge bridge = findBridge();
         SignupLoginReception reception = bridge.getInjector().getInstance(SignupLoginReception.class);
@@ -63,7 +67,7 @@ public final class BoundaryGuardBootstrap {
         TelegramLinkStatusService telegramLinkStatus =
                 new TelegramLinkStatusService(reception, config.telegramRecheckCooldownMillis());
 
-        Condition condition = createCondition(telegramLinkStatus, config.conditionDefinition());
+        Condition condition = createCondition(telegramLinkStatus, discordLinkStatus, config.conditionDefinition());
         RestrictionService restrictions = new RestrictionService(condition, restrictionSetup.restrictions());
 
         registerListeners(restrictions, telegramLinkStatus, messages);
@@ -148,9 +152,20 @@ public final class BoundaryGuardBootstrap {
         throw new IllegalStateException("tg-bridge is required but was not found; disabling Boundary Guard.");
     }
 
-    private Condition createCondition(TelegramLinkStatusService telegramLinkStatus, Object conditionDefinition) {
+    // DiscordSRV is a soft dependency (see plugin.yml) - unlike findBridge(),
+    // its absence is not itself an error; it only becomes one, via
+    // ConfigValidator, if rules.omit-restriction-when actually uses ds-linking-check.
+    private Optional<DiscordSRV> findDiscordSrv() {
+        Plugin dependency = plugin.getServer().getPluginManager().getPlugin("DiscordSRV");
+        return dependency instanceof DiscordSRV discordSrv ? Optional.of(discordSrv) : Optional.empty();
+    }
+
+    private Condition createCondition(
+            TelegramLinkStatusService telegramLinkStatus,
+            Optional<DiscordLinkStatusService> discordLinkStatus,
+            Object conditionDefinition) {
         try {
-            return new ConditionFactory(telegramLinkStatus).fromConfig(conditionDefinition);
+            return new ConditionFactory(telegramLinkStatus, discordLinkStatus).fromConfig(conditionDefinition);
         } catch (IllegalArgumentException exception) {
             throw new IllegalStateException("Invalid rules configuration: " + exception.getMessage(), exception);
         }

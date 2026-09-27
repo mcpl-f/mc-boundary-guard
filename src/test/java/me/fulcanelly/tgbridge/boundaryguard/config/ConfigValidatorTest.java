@@ -19,9 +19,9 @@ class ConfigValidatorTest {
     void acceptsAValidConfig() {
         BoundaryGuardConfig config = configFrom("""
                 rules:
-                  condition:
+                  omit-restriction-when:
                     tg-linking-check: true
-                  strategies:
+                  otherwise-apply-restriction-strategies:
                     keep-on-spawn: true
                 """);
 
@@ -32,15 +32,15 @@ class ConfigValidatorTest {
     void rejectsAnUnknownConditionLeaf() {
         BoundaryGuardConfig config = configFrom("""
                 rules:
-                  condition:
+                  omit-restriction-when:
                     not-a-real-check: true
-                  strategies:
+                  otherwise-apply-restriction-strategies:
                     keep-on-spawn: true
                 """);
 
         IllegalStateException exception =
                 assertThrows(IllegalStateException.class, () -> new ConfigValidator(config).validate());
-        assertTrue(exception.getMessage().contains("rules.condition"));
+        assertTrue(exception.getMessage().contains("rules.omit-restriction-when"));
         assertTrue(exception.getMessage().contains("not-a-real-check"));
     }
 
@@ -48,13 +48,13 @@ class ConfigValidatorTest {
     void rejectsNoStrategyEnabled() {
         BoundaryGuardConfig config = configFrom("""
                 rules:
-                  condition:
+                  omit-restriction-when:
                     tg-linking-check: true
                 """);
 
         IllegalStateException exception =
                 assertThrows(IllegalStateException.class, () -> new ConfigValidator(config).validate());
-        assertTrue(exception.getMessage().contains("rules.strategies"));
+        assertTrue(exception.getMessage().contains("rules.otherwise-apply-restriction-strategies"));
     }
 
     // Both problems are reported together in one exception, rather than
@@ -65,13 +65,13 @@ class ConfigValidatorTest {
     void reportsBothAConditionProblemAndARestrictionProblemTogether() {
         BoundaryGuardConfig config = configFrom("""
                 rules:
-                  condition:
+                  omit-restriction-when:
                     not-a-real-check: true
                 """);
 
         IllegalStateException exception =
                 assertThrows(IllegalStateException.class, () -> new ConfigValidator(config).validate());
-        assertTrue(exception.getMessage().contains("rules.condition"));
-        assertTrue(exception.getMessage().contains("rules.strategies"));
+        assertTrue(exception.getMessage().contains("rules.omit-restriction-when"));
+        assertTrue(exception.getMessage().contains("rules.otherwise-apply-restriction-strategies"));
     }
 }

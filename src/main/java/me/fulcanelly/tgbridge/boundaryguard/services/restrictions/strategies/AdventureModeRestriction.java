@@ -13,7 +13,7 @@ import org.bukkit.entity.Player;
  *
  * Purely reactive to the {@code restricted} flag it's handed - it has no location
  * logic of its own. Whether "restricted" already accounts for location (e.g. an
- * {@code in-spawn-radius} condition) is {@code rules.condition}'s call, not this
+ * {@code in-spawn-radius} condition) is {@code rules.omit-restriction-when}'s call, not this
  * strategy's; it used to duplicate that check locally (its own boundary area plus
  * an {@code everywhere} flag), which meant the same spatial concept was configured
  * in two places that could drift out of sync.

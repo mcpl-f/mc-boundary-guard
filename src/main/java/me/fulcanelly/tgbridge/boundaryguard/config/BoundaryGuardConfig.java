@@ -11,7 +11,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 /** The single adapter from Bukkit YAML configuration to plugin settings. */
 public final class BoundaryGuardConfig {
 
-    // Used only when rules.condition has no in-spawn-radius leaf at all, so a
+    // Used only when rules.omit-restriction-when has no in-spawn-radius leaf at all, so a
     // keep-on-spawn: true with nothing to size it still has a sane area.
     private static final double DEFAULT_SPAWN_RADIUS = 256.0;
 
@@ -38,14 +38,14 @@ public final class BoundaryGuardConfig {
 
     /**
      * The shared spawn-area radius, read from the {@code in-spawn-radius} leaf
-     * inside {@code rules.condition} (wherever it is in the tree - {@code all},
-     * {@code any}, nested or not). There is deliberately no separate
-     * {@code keep-on-spawn.radius}: the area a player must stay inside to count as
-     * unrestricted, and the area {@code keep-on-spawn} physically confines them
-     * to, are the same area, so it's defined once.
+     * inside {@code rules.omit-restriction-when} (wherever it is in the tree -
+     * {@code all}, {@code any}, nested or not). There is deliberately no
+     * separate {@code keep-on-spawn.radius}: the area a player must stay
+     * inside to count as unrestricted, and the area {@code keep-on-spawn}
+     * physically confines them to, are the same area, so it's defined once.
      */
     public double spawnRadius() {
-        double found = findInSpawnRadius(source.get("rules.condition"));
+        double found = findInSpawnRadius(source.get("rules.omit-restriction-when"));
         return Double.isNaN(found) ? DEFAULT_SPAWN_RADIUS : found;
     }
 
@@ -78,15 +78,15 @@ public final class BoundaryGuardConfig {
     }
 
     public boolean spawnBoundaryEnabled() {
-        return source.getBoolean("rules.strategies.keep-on-spawn", false);
+        return source.getBoolean("rules.otherwise-apply-restriction-strategies.keep-on-spawn", false);
     }
 
     public boolean adventureModeEnabled() {
-        return source.getBoolean("rules.strategies.switch-2-adventure-mode", false);
+        return source.getBoolean("rules.otherwise-apply-restriction-strategies.switch-2-adventure-mode", false);
     }
 
     public boolean containerUseForbidden() {
-        return source.getBoolean("rules.strategies.forbid-container-use", false);
+        return source.getBoolean("rules.otherwise-apply-restriction-strategies.forbid-container-use", false);
     }
 
     public long warningCooldownMillis() {
@@ -112,7 +112,7 @@ public final class BoundaryGuardConfig {
     }
 
     public Object conditionDefinition() {
-        return normalize(source.get("rules.condition"));
+        return normalize(source.get("rules.omit-restriction-when"));
     }
 
     public String defaultLocale() {

@@ -26,10 +26,10 @@ class RestrictionFactoryTest {
     void combinesKeepOnSpawnAndAdventureModeWhenBothAreEnabled() {
         BoundaryGuardConfig config = configFrom("""
                 rules:
-                  condition:
+                  omit-restriction-when:
                     any:
                       - in-spawn-radius: 200
-                  strategies:
+                  otherwise-apply-restriction-strategies:
                     keep-on-spawn: true
                     switch-2-adventure-mode: true
                 """);
@@ -44,7 +44,7 @@ class RestrictionFactoryTest {
 
     @Test
     void throwsWhenNoStrategyIsEnabled() {
-        BoundaryGuardConfig config = configFrom("rules:\n  strategies: {}\n");
+        BoundaryGuardConfig config = configFrom("rules:\n  otherwise-apply-restriction-strategies: {}\n");
 
         assertThrows(IllegalStateException.class, () -> new RestrictionFactory(config).create());
     }

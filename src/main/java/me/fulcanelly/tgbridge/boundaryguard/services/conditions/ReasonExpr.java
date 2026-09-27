@@ -4,7 +4,7 @@ import java.util.List;
 
 /**
  * A small expression tree describing why a player is currently restricted,
- * preserving the {@code all}/{@code any} structure of {@code rules.condition}
+ * preserving the {@code all}/{@code any} structure of {@code rules.omit-restriction-when}
  * instead of flattening it into a plain list. That structure is what lets a
  * message join multiple reasons with "and"/"or" correctly instead of just
  * concatenating them.

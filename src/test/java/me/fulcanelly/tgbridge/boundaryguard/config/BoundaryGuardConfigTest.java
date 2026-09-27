@@ -30,7 +30,7 @@ class BoundaryGuardConfigTest {
     void keepOnSpawnIsASimpleBooleanToggle() {
         BoundaryGuardConfig config = configFrom("""
                 rules:
-                  strategies:
+                  otherwise-apply-restriction-strategies:
                     keep-on-spawn: true
                 """);
 
@@ -41,7 +41,7 @@ class BoundaryGuardConfigTest {
     void spawnRadiusIsReadFromTheInSpawnRadiusConditionLeaf() {
         BoundaryGuardConfig config = configFrom("""
                 rules:
-                  condition:
+                  omit-restriction-when:
                     any:
                       - in-spawn-radius: 120
                 """);
@@ -53,7 +53,7 @@ class BoundaryGuardConfigTest {
     void spawnRadiusIsFoundNoMatterHowDeeplyNestedInAllOrAny() {
         BoundaryGuardConfig config = configFrom("""
                 rules:
-                  condition:
+                  omit-restriction-when:
                     all:
                       - tg-linking-check: true
                       - any:
@@ -67,7 +67,7 @@ class BoundaryGuardConfigTest {
     void adventureModeIsASimpleBooleanToggle() {
         BoundaryGuardConfig config = configFrom("""
                 rules:
-                  strategies:
+                  otherwise-apply-restriction-strategies:
                     switch-2-adventure-mode: true
                 """);
 
@@ -76,7 +76,7 @@ class BoundaryGuardConfigTest {
 
     @Test
     void adventureModeDefaultsToDisabled() {
-        BoundaryGuardConfig config = configFrom("rules:\n  strategies: {}\n");
+        BoundaryGuardConfig config = configFrom("rules:\n  otherwise-apply-restriction-strategies: {}\n");
 
         assertFalse(config.adventureModeEnabled());
     }
@@ -155,7 +155,7 @@ class BoundaryGuardConfigTest {
     void conditionDefinitionNormalizesConfigurationSectionsIntoPlainMapsAndLists() {
         BoundaryGuardConfig config = configFrom("""
                 rules:
-                  condition:
+                  omit-restriction-when:
                     all:
                       - tg-linking-check
                       - time-played-limit:

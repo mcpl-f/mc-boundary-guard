@@ -31,7 +31,7 @@ public final class BoundaryMoveListener implements Listener {
 
         // Pins the player at `from` rather than teleporting them back into the area -
         // including for a player who became restricted while already standing
-        // outside it (e.g. rules.condition was tightened after they'd wandered off).
+        // outside it (e.g. rules.omit-restriction-when was tightened after they'd wandered off).
         // That's intentional: `/tgspawn`, advertised right below, is the player's own
         // way back, not something this listener does for them.
         event.setTo(event.getFrom());

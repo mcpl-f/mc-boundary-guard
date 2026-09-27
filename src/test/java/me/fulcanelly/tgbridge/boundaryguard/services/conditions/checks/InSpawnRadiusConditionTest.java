@@ -49,7 +49,7 @@ class InSpawnRadiusConditionTest {
     }
 
     // Not durable the way Telegram linking or playtime are (stepping back out
-    // re-triggers the same block), but still a real rules.condition
+    // re-triggers the same block), but still a real rules.omit-restriction-when
     // alternative - see MinecraftMessageService#reasonMessage for where that
     // distinction actually gets enforced (excluded only from the
     // leave-spawn-restriction message, shown everywhere else).

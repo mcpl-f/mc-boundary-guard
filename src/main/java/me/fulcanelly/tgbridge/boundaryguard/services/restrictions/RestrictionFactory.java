@@ -37,7 +37,7 @@ public final class RestrictionFactory {
             // only) and disables the plugin - this is always a misconfiguration, not
             // a valid "do nothing" mode.
             throw new IllegalStateException(
-                    "No restriction strategies enabled under rules.strategies in config.yml "
+                    "No restriction strategies enabled under rules.otherwise-apply-restriction-strategies in config.yml "
                             + "- unverified players would not be restricted at all. Enable at least "
                             + "one strategy (keep-on-spawn, switch-2-adventure-mode, forbid-container-use).");
         }

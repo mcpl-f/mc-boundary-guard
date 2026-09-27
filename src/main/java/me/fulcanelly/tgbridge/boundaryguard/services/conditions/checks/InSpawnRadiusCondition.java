@@ -23,7 +23,7 @@ import org.bukkit.entity.Player;
  * Its {@link #reason()} is {@link ConditionReason#RETURN_TO_SPAWN} - unlike
  * Telegram linking or playtime, satisfying it isn't durable (stepping back out
  * the moment you move means the condition is unmet again the same way), but it
- * genuinely is one of the alternatives {@code rules.condition} accepts, so a
+ * genuinely is one of the alternatives {@code rules.omit-restriction-when} accepts, so a
  * player blocked from something else (containers, an idle reminder) benefits
  * from being told it's an option. The one place that's NOT true is the message
  * describing the {@code leave-spawn} restriction itself - "return to spawn" as

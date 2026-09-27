@@ -43,7 +43,7 @@ defense if the player ever ends up outside anyway.
 
 ## Rules
 
-`rules.condition` decides when restrictions are lifted. Available conditions:
+`rules.omit-restriction-when` decides when restrictions are lifted. Available conditions:
 
 - **`tg-linking-check`** - met once the player has linked their Minecraft account
   to Telegram (via tg-bridge).
@@ -57,7 +57,7 @@ required), nestable to any depth:
 
 ```yml
 rules:
-  condition:
+  omit-restriction-when:
     all:
       - time-played-limit:
           hours: 2.5
@@ -65,7 +65,7 @@ rules:
           - tg-linking-check
           - ds-linking-check # not implemented yet, just for example
 
-  strategies:
+  otherwise-apply-restriction-strategies:
     keep-on-spawn:
       radius: 2048.0
 
@@ -84,7 +84,7 @@ See `config.yml` for the full, commented default configuration.
 
 Main settings live in `config.yml`:
 
-- `rules.strategies.keep-on-spawn.radius`: sandbox radius in normal worlds (Nether divides it by 8, the End measures it from real `0,0`).
+- `rules.otherwise-apply-restriction-strategies.keep-on-spawn.radius`: sandbox radius in normal worlds (Nether divides it by 8, the End measures it from real `0,0`).
 - `message-cooldown-millis`: delay between repeated warning messages, in milliseconds.
 - `restriction-refresh-interval-ticks`: how often restriction state is re-checked for online players.
 - `telegram-recheck-cooldown-millis`: how long an unlinked Telegram lookup is cached before re-checking tg-bridge.

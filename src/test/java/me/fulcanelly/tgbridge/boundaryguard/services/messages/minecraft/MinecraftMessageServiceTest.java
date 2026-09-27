@@ -268,7 +268,7 @@ class MinecraftMessageServiceTest {
     }
 
     // RETURN_TO_SPAWN (InSpawnRadiusCondition) isn't durable the way linking or
-    // playtime are, but it's still a genuine rules.condition alternative - and
+    // playtime are, but it's still a genuine rules.omit-restriction-when alternative - and
     // unlike the leave-spawn message, there's nothing circular about offering
     // it here: "return to spawn" is a perfectly good answer to "you can't use
     // containers".
