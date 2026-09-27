@@ -8,5 +8,6 @@ package me.fulcanelly.tgbridge.boundaryguard.services.conditions;
 public enum ConditionReason {
     TELEGRAM_LINKING,
     PLAYTIME,
-    RETURN_TO_SPAWN
+    RETURN_TO_SPAWN,
+    DISCORD_LINKING,
 }

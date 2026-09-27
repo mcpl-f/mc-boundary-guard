@@ -32,6 +32,14 @@
             <version>1.4.2</version>
             <scope>provided</scope>
         </dependency>
+        <!-- Soft dependency: only needed if rules.condition uses ds-linking-check.
+             DiscordSRV isn't required to be installed for the plugin to run. -->
+        <dependency>
+            <groupId>com.discordsrv</groupId>
+            <artifactId>discordsrv</artifactId>
+            <version>1.26.2</version>
+            <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
@@ -62,6 +70,16 @@
         <repository>
             <id>spigot-repo</id>
             <url>https://hub.spigotmc.org/nexus/content/groups/public/</url>
+        </repository>
+        <!-- DiscordSRV itself, and its JDA fork transitive dependency below. -->
+        <repository>
+            <id>Scarsz-Nexus</id>
+            <url>https://nexus.scarsz.me/content/groups/public/</url>
+        </repository>
+        <repository>
+            <id>dv8tion</id>
+            <name>m2-dv8tion</name>
+            <url>https://m2.dv8tion.net/releases</url>
         </repository>
         <repository>
             <id>jitpack.io</id>

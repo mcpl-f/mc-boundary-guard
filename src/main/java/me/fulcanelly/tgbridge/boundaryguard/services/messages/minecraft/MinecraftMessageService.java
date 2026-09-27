@@ -232,6 +232,7 @@ public final class MinecraftMessageService {
             case TELEGRAM_LINKING -> "tg-linking";
             case PLAYTIME -> "playtime";
             case RETURN_TO_SPAWN -> "return-to-spawn";
+            case DISCORD_LINKING -> "ds-linking";
         };
     }
 

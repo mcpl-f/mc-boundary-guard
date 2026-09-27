@@ -3,30 +3,47 @@ package me.fulcanelly.tgbridge.boundaryguard.services.conditions;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
-import lombok.RequiredArgsConstructor;
 import me.fulcanelly.tgbridge.boundaryguard.domain.BoundaryArea;
+import me.fulcanelly.tgbridge.boundaryguard.integrations.discordsrv.DiscordLinkStatusService;
 import me.fulcanelly.tgbridge.boundaryguard.integrations.tgbridge.TelegramLinkStatusService;
+import me.fulcanelly.tgbridge.boundaryguard.services.conditions.checks.DiscordLinkedCondition;
 import me.fulcanelly.tgbridge.boundaryguard.services.conditions.checks.InSpawnRadiusCondition;
 import me.fulcanelly.tgbridge.boundaryguard.services.conditions.checks.MinimumPlaytimeCondition;
 import me.fulcanelly.tgbridge.boundaryguard.services.conditions.checks.TelegramLinkedCondition;
 
 /**
- * Builds runtime conditions from the normalized {@code rules.condition} YAML tree.
+ * Builds runtime conditions from the normalized {@code rules.omit-restriction-when} YAML tree.
  * Group nodes use {@code all} or {@code any}; leaf nodes describe one check and
  * its options, for example {@code time-played-limit: {hours: 2.5}}.
  */
-@RequiredArgsConstructor
 public final class ConditionFactory {
 
     private static final String ALL = "all";
     private static final String ANY = "any";
 
     private static final String TELEGRAM_LINK_CHECK = "tg-linking-check";
+    private static final String DISCORD_LINK_CHECK = "ds-linking-check";
     private static final String PLAYTIME_LIMIT = "time-played-limit";
     private static final String IN_SPAWN_RADIUS = "in-spawn-radius";
 
     private final TelegramLinkStatusService telegramLinkStatus;
+
+    // Empty unless DiscordSRV (a soft dependency) is actually installed - see
+    // BoundaryGuardBootstrap#findDiscordSrv. A config using ds-linking-check
+    // without it fails clearly here rather than with an NPE from a Condition
+    // that has nothing to actually check against.
+    private final Optional<DiscordLinkStatusService> discordLinkStatus;
+
+    public ConditionFactory(TelegramLinkStatusService telegramLinkStatus) {
+        this(telegramLinkStatus, Optional.empty());
+    }
+
+    public ConditionFactory(TelegramLinkStatusService telegramLinkStatus, Optional<DiscordLinkStatusService> discordLinkStatus) {
+        this.telegramLinkStatus = telegramLinkStatus;
+        this.discordLinkStatus = discordLinkStatus;
+    }
 
     /**
      * Converts one normalized YAML condition node into its executable rule.
@@ -81,6 +98,9 @@ public final class ConditionFactory {
     private Condition createLeaf(String name, Object parameters) {
         return switch (name) {
             case TELEGRAM_LINK_CHECK -> new TelegramLinkedCondition(telegramLinkStatus);
+            case DISCORD_LINK_CHECK -> new DiscordLinkedCondition(discordLinkStatus.orElseThrow(
+                    () -> new IllegalArgumentException(
+                            DISCORD_LINK_CHECK + " requires the DiscordSRV plugin, which is not installed")));
             case PLAYTIME_LIMIT -> new MinimumPlaytimeCondition(readHours(parameters));
             case IN_SPAWN_RADIUS -> new InSpawnRadiusCondition(new BoundaryArea(readRadius(parameters)));
             default -> throw new IllegalArgumentException("Unknown condition: " + name);
