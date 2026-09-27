@@ -1,0 +1,40 @@
+join:
+  and: "и"
+  or: "или"
+  before: "перед тем как"
+  so-that: "чтобы"
+
+reasons:
+  tg-linking:
+    label: "[Привязать Telegram - /tg account register]"
+    command: "/tg account register"
+    hover: "Выполнить /tg account register"
+    
+  playtime:
+    label: "играть дольше на сервере"
+
+  return-to-spawn:
+    label: "[Вернуться на спавн - /tgspawn]"
+    command: "/tgspawn"
+    hover: "Выполнить /tgspawn"
+
+  ds-linking:
+    label: "[Привязать Discord - /discord link]"
+    command: "/discord link"
+    hover: "Выполнить /discord link"
+
+restrictions:
+  leave-spawn:
+    gerund: "выйти со спавна"
+    infinitive: "выйти со спавна"
+  use-containers:
+    gerund: "пользоваться контейнерами"
+    infinitive: "пользоваться контейнерами"
+  interact-freely:
+    gerund: "свободно взаимодействовать с миром"
+    infinitive: "свободно взаимодействовать с миром"
+
+tgspawn-command:
+  teleported: "Телепортирован в разрешенную зону спавна."
+  already-in-area: "Ты уже находишься в разрешенной зоне спавна."
+  only-player: "Эту команду может использовать только игрок."

@@ -1,30 +1,72 @@
-# Distance from the anchor where unbound players are allowed to move.
-# Normal worlds use world spawn, Nether uses this value divided by 8,
-# and The End uses this value from 0,0.
-allowed-radius: 2048.0
-
 # Avoids spamming the warning on every PlayerMoveEvent.
 message-cooldown-millis: 500.0
 
 # Used when player locale is unsupported or message is missing.
 default-locale: ru
 
-messages:
-  en:
-    blocked: "Bind your Minecraft account to Telegram before leaving spawn."
-    bind-button: "[Bind Telegram - /tg account register]"
-    bind-hover: "Run /tg account register"
-    spawn-button: "[Teleport to spawn - /tgspawn]"
-    spawn-hover: "Run /tgspawn"
-    teleported: "Teleported to the allowed spawn area."
-    already-in-area: "You are already inside the allowed spawn area."
-    only-player: "Only players can use this command."
-  ru:
-    blocked: "Привяжи Minecraft аккаунт к Telegram перед выходом со спавна."
-    bind-button: "[Привязать Telegram - /tg account register]"
-    bind-hover: "Выполнить /tg account register"
-    spawn-button: "[Телепорт на спавн - /tgspawn]"
-    spawn-hover: "Выполнить /tgspawn"
-    teleported: "Телепортирован в разрешенную зону спавна."
-    already-in-area: "Ты уже находишься в разрешенной зоне спавна."
-    only-player: "Эту команду может использовать только игрок."
+# Rules decide when restrictions are lifted.
+# `all` requires every listed condition; `any` requires at least one.
+# `in-spawn-radius` is met while the player is within that distance of the
+# anchor - normal worlds use world spawn, Nether divides this value by 8, and
+# The End uses this value from real 0,0 (see domain/BoundaryArea). It's the
+# single source of truth for "the spawn area": `keep-on-spawn` (below) confines
+# movement to this same area rather than taking its own separate radius.
+#
+# Example: require both Telegram linking and 2.5 hours played:
+# omit-restriction-when:
+#   all:
+#     - tg-linking-check: true
+#     - time-played-limit:
+#         hours: 2.5
+# Example: accept either Telegram linking OR 2.5 hours played:
+# omit-restriction-when:
+#   any:
+#     - tg-linking-check: true
+#     - time-played-limit:
+#         hours: 2.5
+# Example: at least 1 hour played AND (Telegram linked OR Discord linked):
+# omit-restriction-when:
+#   all:
+#     - time-played-limit:
+#         hours: 1.0
+#     - any:
+#         - tg-linking-check: true
+#         - ds-linking-check: true # requires DiscordSRV (soft dependency) installed
+#
+rules:
+  # Unrestricted once linked, OR simply while standing inside the spawn area -
+  # no need to link Telegram just to putter around at spawn.
+  omit-restriction-when:
+    any:
+      - tg-linking-check: true
+      - ds-linking-check: true 
+      - in-spawn-radius: 2048
+
+  otherwise-apply-restriction-strategies:
+    # Plain on/off toggles: the area they act on is always the same
+    # in-spawn-radius above, so there is nothing left to configure per-strategy.
+    # keep-on-spawn: true
+
+    # Uncomment to also (or instead) switch restricted players to Adventure Mode.
+    switch-2-adventure-mode: true
+
+    # Uncomment to prevent restricted players from using containers.
+    # forbid-container-use: true
+
+# How often (in ticks) restriction state is re-checked for online players.
+restriction-refresh-interval-ticks: 60
+
+# How long (in milliseconds) a "not yet linked" Telegram lookup is cached before
+# re-checking tg-bridge for that player.
+telegram-recheck-cooldown-millis: 300
+
+# How often (in seconds) a restricted player still gets reminded what they need
+# to satisfy, even if they're standing still and not triggering anything else.
+# Set enabled to false to turn this reminder off entirely.
+condition-reminder:
+  interval-seconds: 5
+  enabled: true
+
+# Translations live under lang/<locale>.yml, one file per locale, not here -
+# see lang/en.yml and lang/ru.yml. Any lang/*.yml dropped into the plugin's
+# data folder is picked up the same way, no code changes needed.
