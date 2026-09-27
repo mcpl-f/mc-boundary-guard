@@ -10,6 +10,7 @@ import me.fulcanelly.tgbridge.Bridge;
 import me.fulcanelly.tgbridge.tools.twofactor.register.SignupLoginReception;
 import lombok.RequiredArgsConstructor;
 import me.fulcanelly.tgbridge.boundaryguard.config.BoundaryGuardConfig;
+import me.fulcanelly.tgbridge.boundaryguard.config.ConfigValidator;
 import me.fulcanelly.tgbridge.boundaryguard.domain.BoundaryArea;
 import me.fulcanelly.tgbridge.boundaryguard.integrations.tgbridge.TelegramLinkStatusService;
 import me.fulcanelly.tgbridge.boundaryguard.jobs.ConditionReminderJob;
@@ -49,10 +50,12 @@ public final class BoundaryGuardBootstrap {
     private final BoundaryGuardPlugin plugin;
 
     public BoundaryGuardRuntime start() {
+        BoundaryGuardConfig config = new BoundaryGuardConfig(plugin.getConfig(), loadLocales());
+        new ConfigValidator(config).validate();
+
         Bridge bridge = findBridge();
         SignupLoginReception reception = bridge.getInjector().getInstance(SignupLoginReception.class);
 
-        BoundaryGuardConfig config = new BoundaryGuardConfig(plugin.getConfig(), loadLocales());
         MinecraftMessageService messages = new MinecraftMessageService(config, config.warningCooldownMillis());
         RestrictionFactory.Setup restrictionSetup = new RestrictionFactory(config).create();
 
