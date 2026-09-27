@@ -338,7 +338,7 @@ class MinecraftMessageServiceTest {
     // Colors must be assigned structurally to the intended components, not
     // merely appear in toLegacyText() after legacy formatting is stripped.
     @Test
-    void restrictionPhraseInheritsRedFromTheMessageRootInsteadOfStayingUncolored() {
+    void restrictionPhraseInheritsBlueFromTheMessageRootInsteadOfStayingUncolored() {
         when(config.defaultLocale()).thenReturn("en");
         stubPlayer();
         stubPlaytimeReason();
@@ -349,7 +349,7 @@ class MinecraftMessageServiceTest {
         messages.sendContainerBlocked(player, Optional.of(new ReasonExpr.Leaf(ConditionReason.PLAYTIME)));
 
         BaseComponent root = sentComponent();
-        assertEquals(ChatColor.RED, root.getColor());
+        assertEquals(ChatColor.BLUE, root.getColor());
         assertEquals(ChatColor.YELLOW, root.getExtra().get(1).getColor());
 
         BaseComponent effects = root.getExtra().get(root.getExtra().size() - 1);
@@ -358,7 +358,7 @@ class MinecraftMessageServiceTest {
     }
 
     @Test
-    void clickableReasonIsBlueWhileConnectorsAreYellowAndTheWarningRootStaysRed() {
+    void clickableReasonIsBlueWhileConnectorsAreYellowAndTheWarningRootStaysBlue() {
         when(config.defaultLocale()).thenReturn("en");
         stubPlayer();
         when(config.message("en", "reasons.tg-linking.label")).thenReturn("[Bind Telegram - /tg account register]");
@@ -372,7 +372,7 @@ class MinecraftMessageServiceTest {
         messages.sendContainerBlocked(player, Optional.of(new ReasonExpr.Leaf(ConditionReason.TELEGRAM_LINKING)));
 
         BaseComponent root = sentComponent();
-        assertEquals(ChatColor.RED, root.getColor());
+        assertEquals(ChatColor.BLUE, root.getColor());
         assertEquals(ChatColor.BLUE, root.getExtra().get(0).getColor());
         assertEquals(ChatColor.YELLOW, root.getExtra().get(1).getColor());
     }

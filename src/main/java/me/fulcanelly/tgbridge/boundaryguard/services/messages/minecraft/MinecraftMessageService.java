@@ -57,12 +57,13 @@ import org.bukkit.entity.Player;
  * root's own text), but the plugin sends a JSON component tree, not a legacy
  * string: a client renders each node's own resolved color, and a raw
  * {@code §c} sitting inside one node's {@code text} does nothing for any
- * other node. Red is the root's color (a plain-advice reason like playtime
+ * other node. Blue is the root's color (a plain-advice reason like playtime
  * genuinely inherits it, having no color of its own); a clickable reason is
- * blue and a join word/restriction phrase is yellow, both set explicitly
- * rather than relied on to inherit - either way, something that's never
- * given a real structural color renders in the client's default white, which
- * is exactly what was happening before this was written the explicit way.
+ * also explicitly blue and a join word/restriction phrase is yellow, both set
+ * explicitly rather than relied on to inherit - either way, something that's
+ * never given a real structural color renders in the client's default white,
+ * which is exactly what was happening before this was written the explicit
+ * way.
  */
 public final class MinecraftMessageService {
 
@@ -144,13 +145,13 @@ public final class MinecraftMessageService {
         return true;
     }
 
-    // Builds "<reasons> <joinKey> <effects>" as one red TextComponent tree, with
-    // clickable reasons in blue, connectors and restrictions in yellow. This
-    // has to be a component tree rather than one plain string precisely because
-    // a reason can carry its own click/hover action. Red is set once, here, on
-    // the root - every part below that doesn't set its own color (the join
-    // words, the restriction phrase, a non-clickable reason) inherits it, so
-    // there's nothing to keep reapplying as the tree is built up.
+    // Builds "<reasons> <joinKey> <effects>" as one blue TextComponent tree, with
+    // clickable reasons also explicitly blue, connectors and restrictions in
+    // yellow. This has to be a component tree rather than one plain string
+    // precisely because a reason can carry its own click/hover action. Blue is
+    // set once, here, on the root - every part below that doesn't set its own
+    // color (the join words, the restriction phrase, a non-clickable reason)
+    // inherits it, so there's nothing to keep reapplying as the tree is built up.
     private TextComponent reasonMessage(
             Player player, ReasonExpr reason, String joinKey, String restrictionForm, List<RestrictionEffect> effects) {
         TextComponent message = new TextComponent("");

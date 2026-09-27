@@ -39,6 +39,7 @@ rules:
   omit-restriction-when:
     any:
       - tg-linking-check: true
+      - ds-linking-check: true 
       - in-spawn-radius: 2048
 
   otherwise-apply-restriction-strategies:
@@ -63,7 +64,7 @@ telegram-recheck-cooldown-millis: 300
 # to satisfy, even if they're standing still and not triggering anything else.
 # Set enabled to false to turn this reminder off entirely.
 condition-reminder:
-  interval-seconds: 4
+  interval-seconds: 5
   enabled: true
 
 # Translations live under lang/<locale>.yml, one file per locale, not here -

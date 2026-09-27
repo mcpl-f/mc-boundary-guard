@@ -130,7 +130,7 @@ class ShippedConfigTest {
 
         assertEquals(60L, config.restrictionRefreshIntervalTicks());
         assertEquals(300L, config.telegramRecheckCooldownMillis());
-        assertEquals(80L, config.conditionReminderIntervalTicks());
+        assertEquals(100L, config.conditionReminderIntervalTicks());
         assertTrue(config.conditionReminderEnabled());
     }
 
