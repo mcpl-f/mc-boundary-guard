@@ -7,6 +7,9 @@ api-version: 1.16
 depend:
   - tg-bridge
 
+softdepend:
+  - DiscordSRV
+
 main: me.fulcanelly.tgbridge.boundaryguard.BoundaryGuardPlugin
 
 commands:

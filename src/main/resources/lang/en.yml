@@ -20,9 +20,10 @@ reasons:
     label: "[Bind Telegram - /tg account register]"
     command: "/tg account register"
     hover: "Run /tg account register"
+
   playtime:
     label: "play longer on the server"
-  # Satisfying rules.condition via in-spawn-radius isn't durable (stepping
+  # Satisfying rules.omit-restriction-when via in-spawn-radius isn't durable (stepping
   # back out re-triggers the same block), but it's still a real, always-
   # available alternative worth naming - except in the boundary-blocked
   # message itself, where it's excluded (see reasonMessage in
@@ -32,6 +33,13 @@ reasons:
     label: "[Return to spawn - /tgspawn]"
     command: "/tgspawn"
     hover: "Run /tgspawn"
+
+  # Only usable if ds-linking-check is actually configured, which itself
+  # requires the DiscordSRV soft dependency to be installed.
+  ds-linking:
+    label: "[Link Discord - /discord link]"
+    command: "/discord link"
+    hover: "Run /discord link"
 
 # What's currently blocked, named per calling context (boundary/container/
 # condition-reminder). Each restriction needs both an English gerund (after

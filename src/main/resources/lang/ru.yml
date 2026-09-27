@@ -9,12 +9,19 @@ reasons:
     label: "[Привязать Telegram - /tg account register]"
     command: "/tg account register"
     hover: "Выполнить /tg account register"
+    
   playtime:
     label: "играть дольше на сервере"
+
   return-to-spawn:
     label: "[Вернуться на спавн - /tgspawn]"
     command: "/tgspawn"
     hover: "Выполнить /tgspawn"
+
+  ds-linking:
+    label: "[Привязать Discord - /discord link]"
+    command: "/discord link"
+    hover: "Выполнить /discord link"
 
 restrictions:
   leave-spawn:
