@@ -1,101 +1,221 @@
 # Boundary Guard
 
-Lightweight boundary guard for Minecraft servers that use `tg-bridge`.
+Rule-based anti-grief protection for Minecraft servers.
 
-It protects the wider world from anonymous griefing while trying to preserve vanilla experience for regular players. No WorldGuard setup is needed, and there is no need to maintain region protections just to keep new accounts near spawn.
+Define who should be restricted using playtime, location, account verification, or nested combinations of conditions — then choose exactly which restrictions to apply.
 
-## Purpose
+From simple spawn boundaries to multi-condition trust systems, Boundary Guard keeps protection configurable without forcing a specific verification provider or region setup.
 
-This plugin reduces damage from griefers, throwaway accounts, and lazy anonymous players.
+## Contents
 
-Unverified players stay inside a configurable sandbox spawn area. Inside this area they can move, build, break, test, and do whatever your server rules allow.
+- [Quick Start](#quick-start)
+- [Common Configurations](#common-configurations)
+  - [1. Verify with Telegram](#1-verify-with-telegram)
+  - [2. Verify with Telegram or Discord](#2-verify-with-telegram-or-discord)
+  - [3. Require Playtime + Verification](#3-require-playtime--verification)
+- [Restriction Strategies](#restriction-strategies)
+- [Rules](#rules)
+- [Spawn Area](#spawn-area)
+- [Player Experience](#player-experience)
+- [Advanced Rules](#advanced-rules)
+  - [Different Requirements Combined](#different-requirements-combined)
+  - [Verification Without a Spawn Exception](#verification-without-a-spawn-exception)
+- [Configuration](#configuration)
+- [Languages](#languages)
+- [Dependencies](#dependencies)
+  - [tg-bridge](#tg-bridge)
+  - [DiscordSRV](#discordsrv)
 
-To leave the sandbox and access the wider world, a player must pass verification - by default, binding their Minecraft account to Telegram or Discord (configurable, see "Rules" below). This anti-grief account verification makes players less anonymous and raises the cost of griefing without changing normal gameplay for verified players.
+## Quick Start
 
-The goal is simple: keep unverified accounts contained at spawn, let verified players play normally, and avoid heavy region protection plugins when all you need is a small boundary guard.
+Install:
 
-## Behavior
+- `tg-bridge` — required
+- Boundary Guard
+- `DiscordSRV` — optional, only needed for Discord verification
 
-- If the player satisfies `rules.omit-restriction-when` (by default: Telegram
-  linked, Discord linked, or simply standing inside the spawn radius),
-  movement is unrestricted.
-- Otherwise, the plugin blocks movement outside the allowed area.
-- Normal worlds use distance from world spawn.
-- Nether uses configured distance divided by 8.
-- End uses distance from real `0,0`.
-- A blocked player gets clickable actions for whichever ways of satisfying the
-  condition are actually configured:
-  - bind Telegram with `/tg account register`;
-  - link Discord with `/discord link` (only if `ds-linking-check` is
-    configured and DiscordSRV is installed);
-  - teleport back to the spawn area with `/tgspawn` - always offered, since
-    it's a way out for a player not ready to verify yet, not itself one of
-    the ways to satisfy the condition.
+Drop the plugin `.jar` into `plugins/`, restart the server, and choose a rule setup below.
 
+## Common Configurations
 
-## Restriction strategies
+### 1. Verify with Telegram
 
-Unverified players can be restricted by any combination of (each a plain
-on/off toggle - see "Rules" below for where the shared spawn-area radius
-actually comes from):
+Players can play normally within 2048 blocks of spawn.
 
-- **`keep-on-spawn`** - blocks movement outside the spawn area.
-- **`switch-2-adventure-mode`** - switches the player to Adventure Mode while
-  outside the spawn area, leaving survival privileges intact near spawn.
-- **`forbid-container-use`** - blocks opening/using containers (chests, furnaces,
-  etc.) while restricted.
-
-Combine `keep-on-spawn` with `switch-2-adventure-mode` for stricter anti-grief
-protection: a hard movement block, plus Adventure Mode as a second line of
-defense if the player ever ends up outside anyway.
-
-## Rules
-
-`rules.omit-restriction-when` decides when restrictions are lifted. Available conditions:
-
-- **`tg-linking-check`** - met once the player has linked their Minecraft account
-  to Telegram (via tg-bridge).
-- **`ds-linking-check`** - met once the player has linked their Minecraft account
-  to Discord (via DiscordSRV - see "Dependency" below). Configuring this
-  without DiscordSRV installed fails on startup with a clear error.
-- **`time-played-limit`** (`hours`) - met once the player's total playtime
-  reaches the configured number of hours.
-- **`in-spawn-radius`** (distance) - met while the player is within that
-  distance of the spawn anchor (world spawn in normal worlds, divided by 8 in
-  the Nether, measured from real `0,0` in the End). This is the single source
-  of truth for "the spawn area": whichever restriction strategies are enabled
-  above confine/switch the player based on this same radius, not a separate
-  one of their own - there's nothing to configure per-strategy.
-
-Combine them with `all` (every condition required) and `any` (at least one
-required), nestable to any depth. The shipped default lets a player move
-freely once *any* of these hold - linked to Telegram, linked to Discord, or
-simply staying put near spawn:
+To go further, they must link their Minecraft account to Telegram.
 
 ```yml
 rules:
   omit-restriction-when:
     any:
+      - tg-linking-check: true
+      - in-spawn-radius: 2048
+
+  otherwise-apply-restriction-strategies:
+    keep-on-spawn: true
+```
+
+### 2. Verify with Telegram or Discord
+
+Either linked account is enough to leave the spawn area.
+
+```yml
+rules:
+  omit-restriction-when:
+    any:
+      - tg-linking-check: true
+      - ds-linking-check: true
+      - in-spawn-radius: 2048
+
+  otherwise-apply-restriction-strategies:
+    keep-on-spawn: true
+```
+
+`DiscordSRV` must be installed when `ds-linking-check` is used.
+
+### 3. Require playtime + verification
+
+Players must spend at least 1 hour on the server and link either Telegram or Discord before restrictions are removed.
+
+```yml
+rules:
+  omit-restriction-when:
+    any:
+      - in-spawn-radius: 2048
       - all:
           - time-played-limit:
               hours: 1.0
           - any:
               - tg-linking-check: true
               - ds-linking-check: true
-      - in-spawn-radius: 2048
 
   otherwise-apply-restriction-strategies:
-    # keep-on-spawn: true
-
-    # Uncomment to also (or instead) switch to Adventure Mode while outside the area.
-    switch-2-adventure-mode: true
-
-    # Uncomment to block container use while restricted.
-    # forbid-container-use: true
+    keep-on-spawn: true
 ```
 
-A stricter example - require both 2.5 hours played *and* (Telegram *or*
-Discord linked), with no free pass just for staying near spawn:
+For most servers, one of these three configurations is enough.
+
+## Restriction Strategies
+
+Restrictions are configured under:
+
+```yml
+rules:
+  otherwise-apply-restriction-strategies:
+```
+
+Available strategies:
+
+- `keep-on-spawn` — prevents restricted players from leaving the spawn area.
+- `switch-2-adventure-mode` — switches restricted players to Adventure Mode while outside the spawn area.
+- `forbid-container-use` — prevents restricted players from using containers.
+
+Strategies can be combined:
+
+```yml
+rules:
+  otherwise-apply-restriction-strategies:
+    keep-on-spawn: true
+    switch-2-adventure-mode: true
+    forbid-container-use: true
+```
+
+For example, combining `keep-on-spawn` with `switch-2-adventure-mode` gives you a hard boundary plus a second line of protection if a restricted player somehow ends up outside it.
+
+## Rules
+
+`rules.omit-restriction-when` defines when a player is considered unrestricted.
+
+Available conditions:
+
+- `tg-linking-check` — Minecraft account is linked to Telegram through `tg-bridge`.
+- `ds-linking-check` — Minecraft account is linked to Discord through `DiscordSRV`.
+- `time-played-limit` — player has reached the configured total playtime.
+- `in-spawn-radius` — player is currently inside the configured spawn area.
+
+Conditions can be combined using:
+
+- `any` — at least one condition must be satisfied.
+- `all` — every condition must be satisfied.
+
+They can be nested to any depth.
+
+For example:
+
+```yml
+all:
+  - time-played-limit:
+      hours: 2.5
+  - any:
+      - tg-linking-check: true
+      - ds-linking-check: true
+```
+
+means:
+
+> The player must have at least 2.5 hours of playtime AND have either Telegram OR Discord linked.
+
+## Spawn Area
+
+`in-spawn-radius` is the single source of truth for the spawn area.
+
+```yml
+- in-spawn-radius: 2048
+```
+
+The radius is interpreted as:
+
+- Normal worlds — distance from the world's spawn.
+- Nether — configured distance divided by 8.
+- End — distance from real `0,0`.
+
+All enabled restriction strategies use this same radius. There is no separate radius to configure for each strategy.
+
+## Player Experience
+
+When a player hits a restriction, Boundary Guard shows actions that are actually available on the server.
+
+Depending on your configuration, the player may be offered:
+
+- `/tg account register` — link Telegram.
+- `/discord link` — link Discord.
+- `/tgspawn` — teleport back to the allowed spawn area.
+
+`/tgspawn` is always available as a way back for players who do not want to verify yet.
+
+Messages are rate-limited to avoid spam.
+
+## Advanced Rules
+
+Because `any` and `all` are nestable, more complex policies are possible.
+
+### Different requirements combined
+
+```yml
+rules:
+  omit-restriction-when:
+    any:
+      - in-spawn-radius: 1024
+
+      - all:
+          - time-played-limit:
+              hours: 2.5
+          - any:
+              - tg-linking-check: true
+              - ds-linking-check: true
+
+  otherwise-apply-restriction-strategies:
+    keep-on-spawn: true
+    switch-2-adventure-mode: true
+```
+
+This means:
+
+- everyone can stay within 1024 blocks of spawn;
+- outside that area, the player needs at least 2.5 hours of playtime;
+- and either Telegram or Discord must be linked.
+
+### Verification without a spawn exception
 
 ```yml
 rules:
@@ -103,37 +223,57 @@ rules:
     all:
       - time-played-limit:
           hours: 2.5
-      - any:
-          - tg-linking-check: true
-          - ds-linking-check: true
+      - tg-linking-check: true
+
+  otherwise-apply-restriction-strategies:
+    switch-2-adventure-mode: true
+    forbid-container-use: true
 ```
 
-See `config.yml` for the full, commented default configuration.
+Here, being near spawn does not make the player unrestricted.
+
+Until both conditions are satisfied, the configured restriction strategies continue to apply.
 
 ## Configuration
 
-Main settings live in `config.yml`:
+Additional settings live in `config.yml`:
 
-- `rules.omit-restriction-when`'s `in-spawn-radius` leaf: the shared spawn-area
-  radius in normal worlds (Nether divides it by 8, the End measures it from
-  real `0,0`) - see "Rules" above.
-- `message-cooldown-millis`: delay between repeated warning messages, in milliseconds.
-- `restriction-refresh-interval-ticks`: how often restriction state is re-checked for online players.
-- `telegram-recheck-cooldown-millis`: how long an unlinked Telegram lookup is cached before re-checking tg-bridge.
-- `condition-reminder.interval-seconds` / `.enabled`: how often (and whether)
-  a restricted player still idling near nothing in particular gets reminded
-  what they need to satisfy.
-- `default-locale`: fallback language for messages.
+- `message-cooldown-millis` — delay between repeated warning messages.
+- `restriction-refresh-interval-ticks` — how often online player restriction states are refreshed.
+- `telegram-recheck-cooldown-millis` — how long an unlinked Telegram result is cached before checking `tg-bridge` again.
+- `condition-reminder.enabled` — enables periodic verification reminders.
+- `condition-reminder.interval-seconds` — interval between those reminders.
+- `default-locale` — fallback message language.
 
-Translations live under `lang/<locale>.yml` (`lang/en.yml`, `lang/ru.yml` are
-shipped), not in `config.yml` itself. Any `lang/*.yml` dropped into the
-plugin's data folder is picked up automatically, no code change needed.
+See the shipped `config.yml` for the full commented configuration.
 
-## Dependency
+## Languages
 
-This plugin has a hard Bukkit dependency on `tg-bridge` - it must be installed
-and loaded before this plugin.
+Translations live under:
 
-`DiscordSRV` is a soft dependency: install it only if you want to use
-`ds-linking-check`. Without it, the plugin runs normally as long as
-`ds-linking-check` isn't referenced anywhere in `rules.omit-restriction-when`.
+```text
+lang/<locale>.yml
+```
+
+Included by default:
+
+```text
+lang/en.yml
+lang/ru.yml
+```
+
+Additional `lang/*.yml` files placed in the plugin data directory are discovered automatically.
+
+## Dependencies
+
+### tg-bridge
+
+`tg-bridge` is required and must be loaded before Boundary Guard.
+
+### DiscordSRV
+
+`DiscordSRV` is optional.
+
+It is only required if `ds-linking-check` appears anywhere inside `rules.omit-restriction-when`.
+
+If `ds-linking-check` is configured without DiscordSRV installed, Boundary Guard fails during startup with a clear error.
