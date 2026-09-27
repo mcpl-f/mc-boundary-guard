@@ -5,13 +5,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import lombok.RequiredArgsConstructor;
-
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 
 /** The single adapter from Bukkit YAML configuration to plugin settings. */
-@RequiredArgsConstructor
 public final class BoundaryGuardConfig {
 
     // Used only when rules.condition has no in-spawn-radius leaf at all, so a
@@ -21,6 +18,23 @@ public final class BoundaryGuardConfig {
     private static final long TICKS_PER_SECOND = 20L;
 
     private final FileConfiguration source;
+
+    // One entry per locale (e.g. "en", "ru"), loaded from lang/<locale>.yml -
+    // see BoundaryGuardBootstrap#loadLocales. Never messages.* under `source`
+    // - that's what this replaced (see features/*.md for why: config.yml is
+    // settings, lang/*.yml is translations, and mixing them made every
+    // messages.* key indistinguishable from an actual setting in one big file).
+    private final Map<String, ConfigurationSection> locales;
+
+    public BoundaryGuardConfig(FileConfiguration source, Map<String, ? extends ConfigurationSection> locales) {
+        this.source = source;
+        this.locales = Map.copyOf(locales);
+    }
+
+    /** For settings-only tests/call sites that never touch message()/hasMessage(). */
+    public BoundaryGuardConfig(FileConfiguration source) {
+        this(source, Map.of());
+    }
 
     /**
      * The shared spawn-area radius, read from the {@code in-spawn-radius} leaf
@@ -106,24 +120,33 @@ public final class BoundaryGuardConfig {
     }
 
     public String message(String locale, String key) {
-        String localized = source.getString("messages." + locale + "." + key);
+        String localized = messageIn(locale, key);
         if (localized != null) {
             return localized;
         }
 
-        String fallback = source.getString("messages." + defaultLocale() + "." + key);
+        String fallback = messageIn(defaultLocale(), key);
         if (fallback != null) {
             return fallback;
         }
 
-        return source.getString("messages.en." + key, key);
+        String english = messageIn("en", key);
+        return english != null ? english : key;
     }
 
     /** Whether {@code key} resolves to an actual configured value (not the fallback echo). */
     public boolean hasMessage(String locale, String key) {
-        return source.isSet("messages." + locale + "." + key)
-                || source.isSet("messages." + defaultLocale() + "." + key)
-                || source.isSet("messages.en." + key);
+        return isSetIn(locale, key) || isSetIn(defaultLocale(), key) || isSetIn("en", key);
+    }
+
+    private String messageIn(String locale, String key) {
+        ConfigurationSection section = locales.get(locale);
+        return section == null ? null : section.getString(key);
+    }
+
+    private boolean isSetIn(String locale, String key) {
+        ConfigurationSection section = locales.get(locale);
+        return section != null && section.isSet(key);
     }
 
     private Object normalize(Object value) {

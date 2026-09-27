@@ -3,7 +3,9 @@ package me.fulcanelly.tgbridge.boundaryguard.config;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import me.fulcanelly.tgbridge.boundaryguard.integrations.tgbridge.TelegramLinkStatusService;
 import me.fulcanelly.tgbridge.boundaryguard.services.conditions.Condition;
@@ -50,10 +52,24 @@ class ShippedConfigTest {
         try (InputStream in = ShippedConfigTest.class.getResourceAsStream("/config.yml")) {
             assertNotNull(in, "config.yml must be on the test classpath");
             return new BoundaryGuardConfig(
-                    YamlConfiguration.loadConfiguration(new InputStreamReader(in, StandardCharsets.UTF_8)));
+                    YamlConfiguration.loadConfiguration(new InputStreamReader(in, StandardCharsets.UTF_8)),
+                    loadShippedLocales());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private static Map<String, YamlConfiguration> loadShippedLocales() {
+        Map<String, YamlConfiguration> locales = new LinkedHashMap<>();
+        for (String locale : List.of("en", "ru")) {
+            try (InputStream in = ShippedConfigTest.class.getResourceAsStream("/lang/" + locale + ".yml")) {
+                assertNotNull(in, "lang/" + locale + ".yml must be on the test classpath");
+                locales.put(locale, YamlConfiguration.loadConfiguration(new InputStreamReader(in, StandardCharsets.UTF_8)));
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return locales;
     }
 
     // The shipped config.yml ships with exactly one of keep-on-spawn /

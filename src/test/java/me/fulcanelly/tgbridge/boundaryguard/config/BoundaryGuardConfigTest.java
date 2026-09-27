@@ -138,14 +138,11 @@ class BoundaryGuardConfigTest {
 
     @Test
     void messageFallsBackFromLocaleToDefaultLocaleToEnglishToTheKeyItself() {
-        BoundaryGuardConfig config = configFrom("""
-                default-locale: de
-                messages:
-                  en:
-                    blocked: "Blocked"
-                  ru:
-                    blocked: "Zabloklrovano"
-                """);
+        BoundaryGuardConfig config = new BoundaryGuardConfig(
+                YamlConfiguration.loadConfiguration(new StringReader("default-locale: de\n")),
+                Map.of(
+                        "en", YamlConfiguration.loadConfiguration(new StringReader("blocked: \"Blocked\"\n")),
+                        "ru", YamlConfiguration.loadConfiguration(new StringReader("blocked: \"Zabloklrovano\"\n"))));
 
         assertEquals("Zabloklrovano", config.message("ru", "blocked"));
         // "fr" and the default-locale "de" both miss a translation, so this falls to "en".
