@@ -6,6 +6,16 @@ Define who should be restricted using playtime, location, account verification, 
 
 From simple spawn boundaries to multi-condition trust systems, Boundary Guard keeps protection configurable without forcing a specific verification provider or region setup.
 
+## Purpose
+
+Boundary Guard reduces griefing and abuse from new, anonymous, or otherwise untrusted players.
+
+Instead of protecting regions manually, you define when a player should be considered trusted and which restrictions apply until then.
+
+Players can earn unrestricted access through playtime, account verification, location-based rules, or any combination of conditions.
+
+The goal is simple: restrict players only while necessary, then leave normal gameplay completely untouched.
+
 ## Contents
 
 - [Quick Start](#quick-start)
@@ -236,14 +246,18 @@ Until both conditions are satisfied, the configured restriction strategies conti
 
 ## Configuration
 
+## Configuration
+
 Additional settings live in `config.yml`:
 
-- `message-cooldown-millis` — delay between repeated warning messages.
-- `restriction-refresh-interval-ticks` — how often online player restriction states are refreshed.
-- `telegram-recheck-cooldown-millis` — how long an unlinked Telegram result is cached before checking `tg-bridge` again.
-- `condition-reminder.enabled` — enables periodic verification reminders.
-- `condition-reminder.interval-seconds` — interval between those reminders.
-- `default-locale` — fallback message language.
+| Setting | Description |
+|---|---|
+| `message-cooldown-millis` | Delay between repeated warning messages. |
+| `restriction-refresh-interval-ticks` | How often online player restriction states are refreshed. |
+| `telegram-recheck-cooldown-millis` | How long an unlinked Telegram result is cached before checking `tg-bridge` again. |
+| `condition-reminder.enabled` | Enables periodic verification reminders. |
+| `condition-reminder.interval-seconds` | Interval between reminders. |
+| `default-locale` | Fallback message language. |
 
 See the shipped `config.yml` for the full commented configuration.
 
